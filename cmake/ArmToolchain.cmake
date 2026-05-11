@@ -1,9 +1,30 @@
+# Path to your .env file
+set(ENV_FILE "${CMAKE_CURRENT_SOURCE_DIR}/.env")
+
+if(EXISTS ${ENV_FILE})
+    # Read the file line by line
+    file(STRINGS "${ENV_FILE}" CONFIG_LINES)
+    
+    foreach(line ${CONFIG_LINES})
+        # Ignore comments and empty lines
+        if(NOT line MATCHES "^#" AND NOT line STREQUAL "")
+            # Split line into KEY and VALUE
+            string(REGEX MATCH "^([^=]+)=(.*)$" _ ${line})
+            set(KEY ${CMAKE_MATCH_1})
+            set(VALUE ${CMAKE_MATCH_2})
+            
+            # Set as a CMake variable
+            set(${KEY} ${VALUE})
+        endif()
+    endforeach()
+endif()
+
 set(CMAKE_SYSTEM_NAME Generic)
 
 set(CMAKE_SYSTEM_PROCESSOR arm)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
-set(ARM_DIR  "Put Your ARM Toolchain Path Here!")
+set(ARM_DIR  ${ARM_TOOLCHAIN_PATH})
 set(ARM_TOOLCHAIN_DIR ${ARM_DIR}/bin)
 
 if(MINGW OR CYGWIN OR WIN32)
