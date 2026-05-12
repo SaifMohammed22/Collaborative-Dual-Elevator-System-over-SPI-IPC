@@ -10,7 +10,7 @@
 #define EXTI_H_
 
 #include "Std_Types.h"
-#include "stm32f4xx.h"
+#include "Mcu_Hw.h"
 
 /* ------------------------------------------------------------------ */
 /*  Trigger edge                                                       */
