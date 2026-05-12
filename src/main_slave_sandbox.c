@@ -26,12 +26,13 @@
 #include "Floor_Sensor.h"
 #include "Push_Button.h"
 
-#include "stm32f4xx.h"    /* SysTick, CMSIS core */
+#include "Mcu_Hw.h"    /* SysTick, core hardware */
 
 /* =================================================================== */
 /*  Global SysTick counter (referenced by Elevator_Fsm.c)             */
 /* =================================================================== */
 volatile uint32_t g_SysTick_Ms = 0U;
+uint32_t SystemCoreClock = 16000000U;
 
 /**
  * @brief  SysTick ISR — fires every 1 ms.
@@ -42,18 +43,17 @@ void SysTick_Handler(void)
 }
 
 /* =================================================================== */
-/*  SysTick init  (1 ms tick using CMSIS intrinsic)                    */
+/*  SysTick init  (1 ms tick)                                          */
 /* =================================================================== */
 static void SysTick_Init(void)
 {
     /*
-     * SysTick_Config() loads LOAD = (ticks - 1), enables the counter
-     * with the processor clock, and enables the SysTick_IRQn.
-     *
-     * SystemCoreClock is typically set by SystemInit() / startup code.
-     * For default HSI on STM32F401:  SystemCoreClock = 16 000 000.
+     * SysTick configuration
      */
-    SysTick_Config(SystemCoreClock / 1000U);   /* 1 ms period */
+    uint32_t ticks = SystemCoreClock / 1000U;
+    SysTick->LOAD  = (uint32_t)(ticks - 1UL);                         /* set reload register */
+    SysTick->VAL   = 0UL;                                             /* Load the SysTick Counter Value */
+    SysTick->CTRL  = (1UL << 2) | (1UL << 1) | (1UL << 0);            /* Enable SysTick IRQ and SysTick Timer */
 }
 
 /* =================================================================== */
@@ -93,7 +93,7 @@ int main(void)
          * Optional: enter low-power WFI between ticks.
          * The MCU will wake on any EXTI or SysTick interrupt.
          */
-        __WFI();
+        __asm volatile("wfi");
     }
 
     /* unreachable */

@@ -9,7 +9,7 @@
 #define GPIO_H_
 
 #include "Std_Types.h"
-#include "stm32f4xx.h"      /* CMSIS device header */
+#include "Mcu_Hw.h"
 
 /* ------------------------------------------------------------------ */
 /*  Pin Mode                                                           */
