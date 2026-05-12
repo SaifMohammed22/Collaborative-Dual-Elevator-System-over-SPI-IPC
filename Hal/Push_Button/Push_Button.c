@@ -27,6 +27,7 @@
 #include "Gpio.h"
 #include "Exti.h"
 #include "Nvic.h"
+#include "Critical_Section.h"
 
 /* =================================================================== */
 /*  Volatile ISR ↔ main-loop shared flags                              */
@@ -130,10 +131,10 @@ uint8 PushButton_GetAndClear(PushButton_IdType id)
     if (id >= BTN_COUNT) { return FALSE; }
 
     /* Atomic read-then-clear inside a critical section */
-    __asm volatile("cpsid i");
+    ENTER_CRITICAL();
     uint8 was_pressed = g_BtnPressed[id];
     g_BtnPressed[id] = FALSE;
-    __asm volatile("cpsie i");
+    EXIT_CRITICAL();
 
     return was_pressed;
 }
