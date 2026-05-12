@@ -143,6 +143,12 @@ void ElevatorFsm_Run(void)
     case FSM_STATE_MOVING_UP:
     /* ============================================================== */
     {
+        if ((Target_Floor == 0U) || (Target_Floor < current)) {
+            Elevator_SetSpeed(MOTOR_SPEED_STOP);
+            g_State = FSM_STATE_IDLE;
+            break;
+        }
+
         if (current == Target_Floor) {
             /* Arrived */
             Elevator_SetSpeed(MOTOR_SPEED_STOP);
@@ -161,6 +167,12 @@ void ElevatorFsm_Run(void)
     case FSM_STATE_MOVING_DOWN:
     /* ============================================================== */
     {
+        if ((Target_Floor == 0U) || (Target_Floor > current)) {
+            Elevator_SetSpeed(MOTOR_SPEED_STOP);
+            g_State = FSM_STATE_IDLE;
+            break;
+        }
+
         if (current == Target_Floor) {
             Elevator_SetSpeed(MOTOR_SPEED_STOP);
             g_DoorOpenTimestamp = Tick_GetMs();

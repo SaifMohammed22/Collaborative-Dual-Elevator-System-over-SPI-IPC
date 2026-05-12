@@ -25,7 +25,7 @@
 /* =================================================================== */
 /*  Volatile shared state                                              */
 /* =================================================================== */
-static volatile uint8 g_CurrentFloor = FLOOR_UNKNOWN;
+static volatile uint8 g_CurrentFloor = 1U;
 
 /* =================================================================== */
 /*  Initialisation                                                     */
