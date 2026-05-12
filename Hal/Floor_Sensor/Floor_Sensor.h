@@ -34,6 +34,6 @@ void FloorSensor_Init(void);
  * The value is updated asynchronously by the EXTI ISR each time
  * a floor sensor is triggered.
  */
-uint8_t FloorSensor_GetCurrentFloor(void);
+uint8 FloorSensor_GetCurrentFloor(void);
 
 #endif /* FLOOR_SENSOR_H_ */

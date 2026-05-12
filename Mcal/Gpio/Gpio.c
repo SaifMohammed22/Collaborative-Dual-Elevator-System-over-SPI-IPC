@@ -26,53 +26,53 @@ void Gpio_EnableClock(GPIO_TypeDef *port)
 void Gpio_ConfigPin(const Gpio_CfgType *cfg)
 {
     GPIO_TypeDef *port = cfg->Port;
-    uint8_t       pin  = cfg->Pin;
+    uint8       pin  = cfg->Pin;
 
     /* MODER: 2 bits per pin */
     port->MODER &= ~(0x03U << (pin * 2U));
-    port->MODER |=  ((uint32_t)cfg->Mode << (pin * 2U));
+    port->MODER |=  ((uint32)cfg->Mode << (pin * 2U));
 
     /* OTYPER: 1 bit per pin */
     port->OTYPER &= ~(0x01U << pin);
-    port->OTYPER |=  ((uint32_t)cfg->OType << pin);
+    port->OTYPER |=  ((uint32)cfg->OType << pin);
 
     /* OSPEEDR: 2 bits per pin */
     port->OSPEEDR &= ~(0x03U << (pin * 2U));
-    port->OSPEEDR |=  ((uint32_t)cfg->Speed << (pin * 2U));
+    port->OSPEEDR |=  ((uint32)cfg->Speed << (pin * 2U));
 
     /* PUPDR: 2 bits per pin */
     port->PUPDR &= ~(0x03U << (pin * 2U));
-    port->PUPDR |=  ((uint32_t)cfg->PuPd << (pin * 2U));
+    port->PUPDR |=  ((uint32)cfg->PuPd << (pin * 2U));
 
     /* Alternate-function register (AFR[0] for pins 0-7, AFR[1] for 8-15) */
     if (cfg->Mode == GPIO_MODE_AF) {
-        uint8_t idx = (pin < 8U) ? 0U : 1U;
-        uint8_t pos = (pin % 8U) * 4U;
+        uint8 idx = (pin < 8U) ? 0U : 1U;
+        uint8 pos = (pin % 8U) * 4U;
 
         port->AFR[idx] &= ~(0x0FU << pos);
-        port->AFR[idx] |=  ((uint32_t)cfg->AltFunc << pos);
+        port->AFR[idx] |=  ((uint32)cfg->AltFunc << pos);
     }
 }
 
 /* ------------------------------------------------------------------ */
 /*  Digital I/O                                                        */
 /* ------------------------------------------------------------------ */
-uint8_t Gpio_ReadPin(GPIO_TypeDef *port, uint8_t pin)
+uint8 Gpio_ReadPin(GPIO_TypeDef *port, uint8 pin)
 {
     return GET_BIT(port->IDR, pin);
 }
 
-void Gpio_WriteHigh(GPIO_TypeDef *port, uint8_t pin)
+void Gpio_WriteHigh(GPIO_TypeDef *port, uint8 pin)
 {
     port->BSRR = (1U << pin);              /* atomic set via BSRR */
 }
 
-void Gpio_WriteLow(GPIO_TypeDef *port, uint8_t pin)
+void Gpio_WriteLow(GPIO_TypeDef *port, uint8 pin)
 {
     port->BSRR = (1U << (pin + 16U));      /* atomic reset via BSRR[31:16] */
 }
 
-void Gpio_TogglePin(GPIO_TypeDef *port, uint8_t pin)
+void Gpio_TogglePin(GPIO_TypeDef *port, uint8 pin)
 {
     TOG_BIT(port->ODR, pin);
 }

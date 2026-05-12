@@ -65,15 +65,15 @@ void ElevatorMotor_Init(void)
 /* =================================================================== */
 /*  Speed control                                                      */
 /* =================================================================== */
-void Elevator_SetSpeed(uint8_t speed_pct)
+void Elevator_SetSpeed(uint8 speed_pct)
 {
     /* Clamp to 0 – 100 */
     if (speed_pct > 100U) {
         speed_pct = 100U;
     }
 
-    uint32_t arr  = Pwm_GetPeriod(MOTOR_TIMER);
-    uint32_t duty = ((uint32_t)speed_pct * (arr + 1U)) / 100U;
+    uint32 arr  = Pwm_GetPeriod(MOTOR_TIMER);
+    uint32 duty = ((uint32)speed_pct * (arr + 1U)) / 100U;
 
     Pwm_SetDuty(MOTOR_TIMER, MOTOR_CHANNEL, duty);
 }

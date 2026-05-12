@@ -52,12 +52,12 @@ typedef enum {
 /* ------------------------------------------------------------------ */
 typedef struct {
     GPIO_TypeDef   *Port;
-    uint8_t         Pin;        /* 0 – 15 */
+    uint8         Pin;        /* 0 – 15 */
     Gpio_ModeType   Mode;
     Gpio_OTypeType  OType;
     Gpio_PuPdType   PuPd;
     Gpio_SpeedType  Speed;
-    uint8_t         AltFunc;    /* AF0 – AF15, only used when Mode == AF */
+    uint8         AltFunc;    /* AF0 – AF15, only used when Mode == AF */
 } Gpio_CfgType;
 
 /* ------------------------------------------------------------------ */
@@ -78,21 +78,21 @@ void Gpio_ConfigPin(const Gpio_CfgType *cfg);
  * @brief Read the IDR bit for the given pin.
  * @return 0 or 1
  */
-uint8_t Gpio_ReadPin(GPIO_TypeDef *port, uint8_t pin);
+uint8 Gpio_ReadPin(GPIO_TypeDef *port, uint8 pin);
 
 /**
  * @brief Set (1) the ODR bit for the given pin.
  */
-void Gpio_WriteHigh(GPIO_TypeDef *port, uint8_t pin);
+void Gpio_WriteHigh(GPIO_TypeDef *port, uint8 pin);
 
 /**
  * @brief Clear (0) the ODR bit for the given pin.
  */
-void Gpio_WriteLow(GPIO_TypeDef *port, uint8_t pin);
+void Gpio_WriteLow(GPIO_TypeDef *port, uint8 pin);
 
 /**
  * @brief Toggle the ODR bit for the given pin.
  */
-void Gpio_TogglePin(GPIO_TypeDef *port, uint8_t pin);
+void Gpio_TogglePin(GPIO_TypeDef *port, uint8 pin);
 
 #endif /* GPIO_H_ */

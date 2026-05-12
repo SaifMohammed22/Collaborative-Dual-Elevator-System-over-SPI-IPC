@@ -29,8 +29,8 @@ typedef enum {
 typedef struct {
     TIM_TypeDef     *Timer;       /* e.g. TIM2, TIM3, TIM4 …           */
     Pwm_ChannelType  Channel;
-    uint16_t         Prescaler;   /* TIMx_PSC value                    */
-    uint32_t         Period;      /* TIMx_ARR value (auto-reload)      */
+    uint16         Prescaler;   /* TIMx_PSC value                    */
+    uint32         Period;      /* TIMx_ARR value (auto-reload)      */
 } Pwm_CfgType;
 
 /* ------------------------------------------------------------------ */
@@ -49,11 +49,11 @@ void Pwm_Init(const Pwm_CfgType *cfg);
  * @param channel  Channel index.
  * @param duty     New CCR value (0 … ARR).
  */
-void Pwm_SetDuty(TIM_TypeDef *timer, Pwm_ChannelType channel, uint32_t duty);
+void Pwm_SetDuty(TIM_TypeDef *timer, Pwm_ChannelType channel, uint32 duty);
 
 /**
  * @brief Return the current ARR value (useful for % calculation).
  */
-uint32_t Pwm_GetPeriod(TIM_TypeDef *timer);
+uint32 Pwm_GetPeriod(TIM_TypeDef *timer);
 
 #endif /* PWM_H_ */
