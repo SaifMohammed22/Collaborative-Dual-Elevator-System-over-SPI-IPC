@@ -32,7 +32,7 @@
 /*  Global SysTick counter (referenced by Elevator_Fsm.c)             */
 /* =================================================================== */
 volatile uint32 g_SysTick_Ms = 0U;
-uint32 SystemCoreClock = 16000000U;
+extern uint32 SystemCoreClock;
 
 /**
  * @brief  SysTick ISR — fires every 1 ms.
