@@ -76,7 +76,7 @@ void Pwm_Init(const Pwm_CfgType *cfg)
 }
 
 /* ------------------------------------------------------------------ */
-void Pwm_SetDuty(TIM_TypeDef *timer, Pwm_ChannelType channel, uint32_t duty)
+void Pwm_SetDuty(TIM_TypeDef *timer, Pwm_ChannelType channel, uint32 duty)
 {
     switch (channel) {
         case PWM_CHANNEL_1: timer->CCR1 = duty; break;
@@ -87,7 +87,7 @@ void Pwm_SetDuty(TIM_TypeDef *timer, Pwm_ChannelType channel, uint32_t duty)
 }
 
 /* ------------------------------------------------------------------ */
-uint32_t Pwm_GetPeriod(TIM_TypeDef *timer)
+uint32 Pwm_GetPeriod(TIM_TypeDef *timer)
 {
     return timer->ARR;
 }

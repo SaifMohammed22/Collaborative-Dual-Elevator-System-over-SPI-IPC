@@ -31,8 +31,8 @@
 /* =================================================================== */
 /*  Global SysTick counter (referenced by Elevator_Fsm.c)             */
 /* =================================================================== */
-volatile uint32_t g_SysTick_Ms = 0U;
-uint32_t SystemCoreClock = 16000000U;
+volatile uint32 g_SysTick_Ms = 0U;
+uint32 SystemCoreClock = 16000000U;
 
 /**
  * @brief  SysTick ISR — fires every 1 ms.
@@ -50,8 +50,8 @@ static void SysTick_Init(void)
     /*
      * SysTick configuration
      */
-    uint32_t ticks = SystemCoreClock / 1000U;
-    SysTick->LOAD  = (uint32_t)(ticks - 1UL);                         /* set reload register */
+    uint32 ticks = SystemCoreClock / 1000U;
+    SysTick->LOAD  = (uint32)(ticks - 1UL);                         /* set reload register */
     SysTick->VAL   = 0UL;                                             /* Load the SysTick Counter Value */
     SysTick->CTRL  = (1UL << 2) | (1UL << 1) | (1UL << 0);            /* Enable SysTick IRQ and SysTick Timer */
 }

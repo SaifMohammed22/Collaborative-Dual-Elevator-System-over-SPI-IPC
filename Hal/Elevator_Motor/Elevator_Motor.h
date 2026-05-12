@@ -37,6 +37,6 @@ void ElevatorMotor_Init(void);
  *
  * Internally maps the percentage to the timer CCR value.
  */
-void Elevator_SetSpeed(uint8_t speed_pct);
+void Elevator_SetSpeed(uint8 speed_pct);
 
 #endif /* ELEVATOR_MOTOR_H_ */

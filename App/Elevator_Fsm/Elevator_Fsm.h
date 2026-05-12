@@ -42,7 +42,7 @@ typedef enum {
  *         MUST be `volatile` — it is written from ISR context
  *         (cabin-button EXTI) and read from the main loop.
  */
-extern volatile uint8_t Target_Floor;
+extern volatile uint8 Target_Floor;
 
 /* ------------------------------------------------------------------ */
 /*  API                                                                */

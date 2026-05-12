@@ -25,7 +25,7 @@
 /* =================================================================== */
 /*  Volatile shared state                                              */
 /* =================================================================== */
-static volatile uint8_t g_CurrentFloor = FLOOR_UNKNOWN;
+static volatile uint8 g_CurrentFloor = FLOOR_UNKNOWN;
 
 /* =================================================================== */
 /*  Initialisation                                                     */
@@ -70,7 +70,7 @@ void FloorSensor_Init(void)
 /* =================================================================== */
 /*  Getter                                                             */
 /* =================================================================== */
-uint8_t FloorSensor_GetCurrentFloor(void)
+uint8 FloorSensor_GetCurrentFloor(void)
 {
     return g_CurrentFloor;
 }

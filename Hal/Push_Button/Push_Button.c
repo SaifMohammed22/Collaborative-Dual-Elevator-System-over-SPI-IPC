@@ -31,8 +31,8 @@
 /* =================================================================== */
 /*  Volatile ISR ↔ main-loop shared flags                              */
 /* =================================================================== */
-static volatile uint8_t g_BtnPressed[BTN_COUNT];
-static volatile uint8_t g_EmergencyActive;
+static volatile uint8 g_BtnPressed[BTN_COUNT];
+static volatile uint8 g_EmergencyActive;
 
 /* =================================================================== */
 /*  Initialisation                                                     */
@@ -116,7 +116,7 @@ void PushButton_Init(void)
     Nvic_EnableIrq(EXTI15_10_IRQn);
 
     /* ---- Clear all flags ----------------------------------------- */
-    for (uint8_t i = 0U; i < BTN_COUNT; i++) {
+    for (uint8 i = 0U; i < BTN_COUNT; i++) {
         g_BtnPressed[i] = FALSE;
     }
     g_EmergencyActive = FALSE;
@@ -125,20 +125,20 @@ void PushButton_Init(void)
 /* =================================================================== */
 /*  Flag access (main-loop side)                                       */
 /* =================================================================== */
-uint8_t PushButton_GetAndClear(PushButton_IdType id)
+uint8 PushButton_GetAndClear(PushButton_IdType id)
 {
     if (id >= BTN_COUNT) { return FALSE; }
 
     /* Atomic read-then-clear inside a critical section */
-    __disable_irq();
-    uint8_t was_pressed = g_BtnPressed[id];
+    __asm volatile("cpsid i");
+    uint8 was_pressed = g_BtnPressed[id];
     g_BtnPressed[id] = FALSE;
-    __enable_irq();
+    __asm volatile("cpsie i");
 
     return was_pressed;
 }
 
-uint8_t PushButton_IsEmergencyActive(void)
+uint8 PushButton_IsEmergencyActive(void)
 {
     return g_EmergencyActive;
 }

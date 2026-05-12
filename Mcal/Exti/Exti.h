@@ -37,7 +37,7 @@ typedef enum {
 /*  Configuration aggregate                                            */
 /* ------------------------------------------------------------------ */
 typedef struct {
-    uint8_t            Line;       /* EXTI line 0 – 15 (matches pin number) */
+    uint8            Line;       /* EXTI line 0 – 15 (matches pin number) */
     Exti_PortType      Port;       /* Port that sources this line           */
     Exti_TriggerType   Trigger;
 } Exti_CfgType;
@@ -60,6 +60,6 @@ void Exti_ConfigLine(const Exti_CfgType *cfg);
  * @brief Clear the pending flag for the given EXTI line.
  *        Must be called inside the ISR before returning.
  */
-void Exti_ClearPending(uint8_t line);
+void Exti_ClearPending(uint8 line);
 
 #endif /* EXTI_H_ */

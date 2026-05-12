@@ -32,13 +32,13 @@ void Nvic_DisableIrq(IRQn_Type irqn);
  *
  * Uses a fixed priority grouping of 4 bits pre-emption / 0 bits sub.
  */
-void Nvic_SetPriority(IRQn_Type irqn, uint8_t preempt, uint8_t sub);
+void Nvic_SetPriority(IRQn_Type irqn, uint8 preempt, uint8 sub);
 
 /**
  * @brief Configure the priority grouping (AIRCR.PRIGROUP).
  * @param grouping  Value 0 – 7 as per ARM Cortex-M specification.
  *                  3 => 4 bits pre-emption / 0 bits sub (recommended).
  */
-void Nvic_SetPriorityGrouping(uint32_t grouping);
+void Nvic_SetPriorityGrouping(uint32 grouping);
 
 #endif /* NVIC_H_ */

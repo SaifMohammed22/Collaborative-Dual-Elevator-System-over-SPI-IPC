@@ -15,14 +15,14 @@ void Exti_EnableSysCfgClock(void)
 /* ------------------------------------------------------------------ */
 void Exti_ConfigLine(const Exti_CfgType *cfg)
 {
-    uint8_t line = cfg->Line;
+    uint8 line = cfg->Line;
 
     /* --- SYSCFG: map port to EXTI line ----------------------------- */
-    uint8_t reg_idx  = line / 4U;           /* EXTICR[0..3] */
-    uint8_t field    = (line % 4U) * 4U;    /* 4-bit field position */
+    uint8 reg_idx  = line / 4U;           /* EXTICR[0..3] */
+    uint8 field    = (line % 4U) * 4U;    /* 4-bit field position */
 
     SYSCFG->EXTICR[reg_idx] &= ~(0x0FU << field);
-    SYSCFG->EXTICR[reg_idx] |=  ((uint32_t)cfg->Port << field);
+    SYSCFG->EXTICR[reg_idx] |=  ((uint32)cfg->Port << field);
 
     /* --- Trigger edge ---------------------------------------------- */
     switch (cfg->Trigger) {
@@ -45,7 +45,7 @@ void Exti_ConfigLine(const Exti_CfgType *cfg)
 }
 
 /* ------------------------------------------------------------------ */
-void Exti_ClearPending(uint8_t line)
+void Exti_ClearPending(uint8 line)
 {
     /* Write 1 to clear (rc_w1) */
     EXTI->PR = (1U << line);

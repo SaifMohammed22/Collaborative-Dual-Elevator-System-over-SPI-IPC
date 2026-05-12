@@ -50,157 +50,157 @@
 
 /* GPIO */
 typedef struct {
-    volatile uint32_t MODER;
-    volatile uint32_t OTYPER;
-    volatile uint32_t OSPEEDR;
-    volatile uint32_t PUPDR;
-    volatile uint32_t IDR;
-    volatile uint32_t ODR;
-    volatile uint32_t BSRR;
-    volatile uint32_t LCKR;
-    volatile uint32_t AFR[2];
+    volatile uint32 MODER;
+    volatile uint32 OTYPER;
+    volatile uint32 OSPEEDR;
+    volatile uint32 PUPDR;
+    volatile uint32 IDR;
+    volatile uint32 ODR;
+    volatile uint32 BSRR;
+    volatile uint32 LCKR;
+    volatile uint32 AFR[2];
 } GPIO_TypeDef;
 
 /* RCC */
 typedef struct {
-    volatile uint32_t CR;
-    volatile uint32_t PLLCFGR;
-    volatile uint32_t CFGR;
-    volatile uint32_t CIR;
-    volatile uint32_t AHB1RSTR;
-    volatile uint32_t AHB2RSTR;
-    volatile uint32_t Reserved0;
-    volatile uint32_t Reserved1;
-    volatile uint32_t APB1RSTR;
-    volatile uint32_t APB2RSTR;
-    volatile uint32_t Reserved2[2];
-    volatile uint32_t AHB1ENR;
-    volatile uint32_t AHB2ENR;
-    volatile uint32_t Reserved3[2];
-    volatile uint32_t APB1ENR;
-    volatile uint32_t APB2ENR;
-    volatile uint32_t Reserved4[2];
-    volatile uint32_t AHB1LPENR;
-    volatile uint32_t AHB2LPENR;
-    volatile uint32_t Reserved5[2];
-    volatile uint32_t APB1LPENR;
-    volatile uint32_t APB2LPENR;
-    volatile uint32_t Reserved6[2];
-    volatile uint32_t BDCR;
-    volatile uint32_t CSR;
-    volatile uint32_t Reserved7[2];
-    volatile uint32_t SSCGR;
-    volatile uint32_t PLLI2SCFGR;
+    volatile uint32 CR;
+    volatile uint32 PLLCFGR;
+    volatile uint32 CFGR;
+    volatile uint32 CIR;
+    volatile uint32 AHB1RSTR;
+    volatile uint32 AHB2RSTR;
+    volatile uint32 Reserved0;
+    volatile uint32 Reserved1;
+    volatile uint32 APB1RSTR;
+    volatile uint32 APB2RSTR;
+    volatile uint32 Reserved2[2];
+    volatile uint32 AHB1ENR;
+    volatile uint32 AHB2ENR;
+    volatile uint32 Reserved3[2];
+    volatile uint32 APB1ENR;
+    volatile uint32 APB2ENR;
+    volatile uint32 Reserved4[2];
+    volatile uint32 AHB1LPENR;
+    volatile uint32 AHB2LPENR;
+    volatile uint32 Reserved5[2];
+    volatile uint32 APB1LPENR;
+    volatile uint32 APB2LPENR;
+    volatile uint32 Reserved6[2];
+    volatile uint32 BDCR;
+    volatile uint32 CSR;
+    volatile uint32 Reserved7[2];
+    volatile uint32 SSCGR;
+    volatile uint32 PLLI2SCFGR;
 } RCC_TypeDef;
 
 /* EXTI */
 typedef struct {
-    volatile uint32_t IMR;
-    volatile uint32_t EMR;
-    volatile uint32_t RTSR;
-    volatile uint32_t FTSR;
-    volatile uint32_t SWIER;
-    volatile uint32_t PR;
+    volatile uint32 IMR;
+    volatile uint32 EMR;
+    volatile uint32 RTSR;
+    volatile uint32 FTSR;
+    volatile uint32 SWIER;
+    volatile uint32 PR;
 } EXTI_TypeDef;
 
 /* SYSCFG */
 typedef struct {
-    volatile uint32_t MEMRMP;
-    volatile uint32_t PMC;
-    volatile uint32_t EXTICR[4];
-    volatile uint32_t CMPCR;
+    volatile uint32 MEMRMP;
+    volatile uint32 PMC;
+    volatile uint32 EXTICR[4];
+    volatile uint32 CMPCR;
 } SYSCFG_TypeDef;
 
 /* NVIC */
 typedef struct {
-    volatile uint32_t ISER[8];
-    volatile uint32_t Reserved0[24];
-    volatile uint32_t ICER[8];
-    volatile uint32_t Reserved1[24];
-    volatile uint32_t ISPR[8];
-    volatile uint32_t Reserved2[24];
-    volatile uint32_t ICPR[8];
-    volatile uint32_t Reserved3[24];
-    volatile uint32_t IABR[8];
-    volatile uint32_t Reserved4[56];
-    volatile uint8_t  IP[240];
-    volatile uint32_t Reserved5[644];
-    volatile uint32_t STIR;
+    volatile uint32 ISER[8];
+    volatile uint32 Reserved0[24];
+    volatile uint32 ICER[8];
+    volatile uint32 Reserved1[24];
+    volatile uint32 ISPR[8];
+    volatile uint32 Reserved2[24];
+    volatile uint32 ICPR[8];
+    volatile uint32 Reserved3[24];
+    volatile uint32 IABR[8];
+    volatile uint32 Reserved4[56];
+    volatile uint8  IP[240];
+    volatile uint32 Reserved5[644];
+    volatile uint32 STIR;
 } NVIC_Type;
 
 /* SCB */
 typedef struct {
-    volatile uint32_t CPUID;
-    volatile uint32_t ICSR;
-    volatile uint32_t VTOR;
-    volatile uint32_t AIRCR;
-    volatile uint32_t SCR;
-    volatile uint32_t CCR;
-    volatile uint8_t  SHP[12];
-    volatile uint32_t SHCSR;
-    volatile uint32_t CFSR;
-    volatile uint32_t HFSR;
-    volatile uint32_t DFSR;
-    volatile uint32_t MMFAR;
-    volatile uint32_t BFAR;
-    volatile uint32_t AFSR;
+    volatile uint32 CPUID;
+    volatile uint32 ICSR;
+    volatile uint32 VTOR;
+    volatile uint32 AIRCR;
+    volatile uint32 SCR;
+    volatile uint32 CCR;
+    volatile uint8  SHP[12];
+    volatile uint32 SHCSR;
+    volatile uint32 CFSR;
+    volatile uint32 HFSR;
+    volatile uint32 DFSR;
+    volatile uint32 MMFAR;
+    volatile uint32 BFAR;
+    volatile uint32 AFSR;
 } SCB_Type;
 
 /* SysTick */
 typedef struct {
-    volatile uint32_t CTRL;
-    volatile uint32_t LOAD;
-    volatile uint32_t VAL;
-    volatile uint32_t CALIB;
+    volatile uint32 CTRL;
+    volatile uint32 LOAD;
+    volatile uint32 VAL;
+    volatile uint32 CALIB;
 } SysTick_Type;
 
 /* TIM */
 typedef struct {
-    volatile uint32_t CR1;
-    volatile uint32_t CR2;
-    volatile uint32_t SMCR;
-    volatile uint32_t DIER;
-    volatile uint32_t SR;
-    volatile uint32_t EGR;
-    volatile uint32_t CCMR1;
-    volatile uint32_t CCMR2;
-    volatile uint32_t CCER;
-    volatile uint32_t CNT;
-    volatile uint32_t PSC;
-    volatile uint32_t ARR;
-    volatile uint32_t Reserved0;
-    volatile uint32_t CCR1;
-    volatile uint32_t CCR2;
-    volatile uint32_t CCR3;
-    volatile uint32_t CCR4;
-    volatile uint32_t Reserved1;
-    volatile uint32_t DCR;
-    volatile uint32_t DMAR;
-    volatile uint32_t OR;
+    volatile uint32 CR1;
+    volatile uint32 CR2;
+    volatile uint32 SMCR;
+    volatile uint32 DIER;
+    volatile uint32 SR;
+    volatile uint32 EGR;
+    volatile uint32 CCMR1;
+    volatile uint32 CCMR2;
+    volatile uint32 CCER;
+    volatile uint32 CNT;
+    volatile uint32 PSC;
+    volatile uint32 ARR;
+    volatile uint32 Reserved0;
+    volatile uint32 CCR1;
+    volatile uint32 CCR2;
+    volatile uint32 CCR3;
+    volatile uint32 CCR4;
+    volatile uint32 Reserved1;
+    volatile uint32 DCR;
+    volatile uint32 DMAR;
+    volatile uint32 OR;
 } TIM_TypeDef;
 
 /* SPI */
 typedef struct {
-    volatile uint32_t CR1;
-    volatile uint32_t CR2;
-    volatile uint32_t SR;
-    volatile uint32_t DR;
-    volatile uint32_t CRCPR;
-    volatile uint32_t RXCRCR;
-    volatile uint32_t TXCRCR;
-    volatile uint32_t I2SCFGR;
-    volatile uint32_t I2SPR;
+    volatile uint32 CR1;
+    volatile uint32 CR2;
+    volatile uint32 SR;
+    volatile uint32 DR;
+    volatile uint32 CRCPR;
+    volatile uint32 RXCRCR;
+    volatile uint32 TXCRCR;
+    volatile uint32 I2SCFGR;
+    volatile uint32 I2SPR;
 } SPI_TypeDef;
 
 /* USART */
 typedef struct {
-    volatile uint32_t SR;
-    volatile uint32_t DR;
-    volatile uint32_t BRR;
-    volatile uint32_t CR1;
-    volatile uint32_t CR2;
-    volatile uint32_t CR3;
-    volatile uint32_t GTPR;
+    volatile uint32 SR;
+    volatile uint32 DR;
+    volatile uint32 BRR;
+    volatile uint32 CR1;
+    volatile uint32 CR2;
+    volatile uint32 CR3;
+    volatile uint32 GTPR;
 } USART_TypeDef;
 
 /* ------------------------------------------------------------------------- */

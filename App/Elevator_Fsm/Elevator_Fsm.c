@@ -39,7 +39,7 @@
 /* =================================================================== */
 /*  Global target variable (definition — declared extern in header)     */
 /* =================================================================== */
-volatile uint8_t Target_Floor = 0U;
+volatile uint8 Target_Floor = 0U;
 
 /* =================================================================== */
 /*  Non-blocking tick counter (driven by SysTick @ 1 ms)               */
@@ -49,18 +49,18 @@ volatile uint8_t Target_Floor = 0U;
  * @brief  Millisecond counter incremented by the SysTick ISR.
  *         Declared volatile since it is written in ISR context.
  */
-extern volatile uint32_t g_SysTick_Ms;
+extern volatile uint32 g_SysTick_Ms;
 
 /**
  * @brief  Return the current millisecond tick count.
  */
-static inline uint32_t Tick_GetMs(void) { return g_SysTick_Ms; }
+static inline uint32 Tick_GetMs(void) { return g_SysTick_Ms; }
 
 /**
  * @brief  Return TRUE if `duration_ms` has elapsed since `start_ms`.
  *         Handles 32-bit wrap-around correctly.
  */
-static inline uint8_t Tick_Elapsed(uint32_t start_ms, uint32_t duration_ms)
+static inline uint8 Tick_Elapsed(uint32 start_ms, uint32 duration_ms)
 {
     return ((Tick_GetMs() - start_ms) >= duration_ms) ? TRUE : FALSE;
 }
@@ -74,7 +74,7 @@ static inline uint8_t Tick_Elapsed(uint32_t start_ms, uint32_t duration_ms)
 /*  Private state                                                      */
 /* =================================================================== */
 static ElevatorFsm_StateType g_State;
-static uint32_t              g_DoorOpenTimestamp;
+static uint32              g_DoorOpenTimestamp;
 
 /* =================================================================== */
 /*  Initialisation                                                     */
@@ -101,7 +101,7 @@ void ElevatorFsm_Run(void)
         return;
     }
 
-    uint8_t current = FloorSensor_GetCurrentFloor();
+    uint8 current = FloorSensor_GetCurrentFloor();
 
     switch (g_State) {
 
@@ -110,7 +110,7 @@ void ElevatorFsm_Run(void)
     /* ============================================================== */
     {
         /* Consume any pending cabin-button presses → set Target_Floor */
-        for (uint8_t f = 0U; f < 4U; f++) {
+        for (uint8 f = 0U; f < 4U; f++) {
             if (PushButton_GetAndClear((PushButton_IdType)f)) {
                 Target_Floor = f + 1U;   /* buttons are 0-indexed */
             }

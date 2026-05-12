@@ -42,7 +42,7 @@ void PushButton_Init(void);
  *
  * Flags are set by the EXTI ISR and consumed here — no polling.
  */
-uint8_t PushButton_GetAndClear(PushButton_IdType id);
+uint8 PushButton_GetAndClear(PushButton_IdType id);
 
 /**
  * @brief  Directly read the emergency-stop flag (volatile).
@@ -51,7 +51,7 @@ uint8_t PushButton_GetAndClear(PushButton_IdType id);
  * This is a separate fast-path for the FSM to check without
  * a generic loop over all buttons.
  */
-uint8_t PushButton_IsEmergencyActive(void);
+uint8 PushButton_IsEmergencyActive(void);
 
 /**
  * @brief  Clear the emergency-stop flag (called when the FSM

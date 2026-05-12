@@ -4,33 +4,47 @@
  */
 
 #include "Nvic.h"
+#include "Mcu_Hw.h"
 
 /* ------------------------------------------------------------------ */
 void Nvic_EnableIrq(IRQn_Type irqn)
 {
-    NVIC_EnableIRQ(irqn);      /* CMSIS intrinsic */
+    if ((sint32)irqn >= 0)
+    {
+        NVIC->ISER[((uint32)irqn) >> 5] = (1UL << (((uint32)irqn) & 0x1F));
+    }
 }
 
 /* ------------------------------------------------------------------ */
 void Nvic_DisableIrq(IRQn_Type irqn)
 {
-    NVIC_DisableIRQ(irqn);
+    if ((sint32)irqn >= 0)
+    {
+        NVIC->ICER[((uint32)irqn) >> 5] = (1UL << (((uint32)irqn) & 0x1F));
+    }
 }
 
 /* ------------------------------------------------------------------ */
-void Nvic_SetPriority(IRQn_Type irqn, uint8_t preempt, uint8_t sub)
+void Nvic_SetPriority(IRQn_Type irqn, uint8 preempt, uint8 sub)
 {
     /*
-     * Combine preempt and sub into the format expected by CMSIS based
-     * on the current PRIGROUP setting.
+     * For STM32F4 (Cortex-M4), priority is in the upper 4 bits of the IP byte.
+     * Assuming PRIGROUP = 3 (4 bits pre-emption, 0 bits sub-priority).
      */
-    uint32_t grouping     = NVIC_GetPriorityGrouping();
-    uint32_t encoded_prio = NVIC_EncodePriority(grouping, preempt, sub);
-    NVIC_SetPriority(irqn, encoded_prio);
+    uint8 priority = (preempt << 4) | (sub & 0x0F);
+    
+    if ((sint32)irqn >= 0)
+    {
+        NVIC->IP[(uint32)irqn] = (uint8)(priority & 0xF0);
+    }
 }
 
 /* ------------------------------------------------------------------ */
-void Nvic_SetPriorityGrouping(uint32_t grouping)
+void Nvic_SetPriorityGrouping(uint32 grouping)
 {
-    NVIC_SetPriorityGrouping(grouping);
+    uint32 reg_value;
+    reg_value  =  SCB->AIRCR;
+    reg_value &= ~((0xFFFFUL << 16) | (7UL << 8));
+    reg_value |=  ((0x5FAUL << 16) | ((grouping & 7UL) << 8));
+    SCB->AIRCR =  reg_value;
 }
