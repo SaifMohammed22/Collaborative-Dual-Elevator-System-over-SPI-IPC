@@ -3,10 +3,10 @@
 
 #include "Std_Types.h"
 
-/* Initializes TIM3 with the specified prescaler and auto-reload for 500ms */
-void Timer3_Init(void);
+/* Global flag for 500ms tick */
+extern volatile uint8 g_tick_500ms;
 
-/* Sets the callback to be executed inside the TIM3 ISR */
-void Timer3_SetCallback(void (*Callback)(void));
+/* Initializes TIM3 with the specified prescaler and auto-reload for 500ms */
+void Timer_Init_TIM3_500ms(uint32 sys_clock_freq);
 
 #endif /* TIMER_H_ */

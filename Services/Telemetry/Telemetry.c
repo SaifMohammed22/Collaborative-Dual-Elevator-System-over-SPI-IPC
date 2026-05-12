@@ -25,5 +25,5 @@ void Telemetry_SendState(const ElevatorState_t* masterState, const ElevatorState
             localMaster.current_floor, localMaster.target_floor, localMaster.state, localMaster.system_flags,
             localSlave.current_floor, localSlave.target_floor, localSlave.state, localSlave.system_flags);
             
-    Uart2_SendString(telemetryBuffer);
+    Uart_SendString(telemetryBuffer);
 }

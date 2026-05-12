@@ -3,9 +3,7 @@
 #include "Bit_Operations.h"
 #include "Gpio.h"
 
-extern uint32 SystemCoreClock;
-
-void Uart2_Init(uint32 baudRate) {
+void Uart_Init_USART2_115200(uint32 pclk_freq) {
     /* 1. Enable USART2 Clock (APB1, Bit 17) */
     SET_BIT(RCC->APB1ENR, 17U); 
     
@@ -24,15 +22,14 @@ void Uart2_Init(uint32 baudRate) {
     Gpio_ConfigPin(&txPinCfg);
     
     /* 3. Configure Baud Rate */
-    /* Assuming APB1 clock is SystemCoreClock (simplification for 16MHz default) */
-    USART2->BRR = SystemCoreClock / baudRate;
+    USART2->BRR = pclk_freq / 115200U;
     
     /* 4. Enable USART (UE=1), Transmitter (TE=1) */
     /* CR1: TE is bit 3, UE is bit 13 */
     USART2->CR1 = (1U << 3U) | (1U << 13U);
 }
 
-void Uart2_SendString(const char* str) {
+void Uart_SendString(const char* str) {
     if (str == NULL_PTR) return;
     
     while (*str) {

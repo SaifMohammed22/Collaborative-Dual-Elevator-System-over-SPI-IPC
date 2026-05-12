@@ -3,45 +3,37 @@
 #include "Bit_Operations.h"
 #include "Nvic.h"
 
-extern uint32 SystemCoreClock;
+volatile uint8 g_tick_500ms = 0U;
 
-static void (*Timer3_Callback)(void) = NULL_PTR;
-
-void Timer3_Init(void) {
-    /* 1. Enable TIM3 Clock (APB1) */
+void Timer_Init_TIM3_500ms(uint32 sys_clock_freq) {
+    /* Enable TIM3 Clock (APB1, Bit 1) */
     SET_BIT(RCC->APB1ENR, RCC_APB1ENR_TIM3EN_Pos);
     
-    /* 2. Calculate Prescaler for 1ms tick 
-       Assuming APB1 timer clock is SystemCoreClock.
-       (If SystemCoreClock = 16MHz, PSC = 15999. If 84MHz, PSC = 83999) */
-    TIM3->PSC = (SystemCoreClock / 1000U) - 1U;
+    /* Calculate Prescaler for 10KHz tick (0.1ms) */
+    /* Assuming APB1 timer clock is sys_clock_freq */
+    TIM3->PSC = (sys_clock_freq / 10000U) - 1U;
     
-    /* 3. Set Auto-Reload Register for 500ms */
-    TIM3->ARR = 500U - 1U;
+    /* Set Auto-Reload Register for exactly 500ms (5000 * 0.1ms = 500ms) */
+    TIM3->ARR = 5000U - 1U;
     
-    /* 4. Enable Update Interrupt */
-    SET_BIT(TIM3->DIER, 0U); /* UIE (Update Interrupt Enable) is bit 0 */
+    /* Enable Update Interrupt */
+    SET_BIT(TIM3->DIER, 0U); /* UIE */
     
-    /* 5. Enable TIM3 in NVIC */
+    /* Enable TIM3 in NVIC */
     Nvic_EnableIrq(TIM3_IRQn);
-    Nvic_SetPriority(TIM3_IRQn, 3U, 0U); /* Priority 3: lower than emergency stop */
+    Nvic_SetPriority(TIM3_IRQn, 3U, 0U);
     
-    /* 6. Enable TIM3 */
+    /* Enable TIM3 */
     SET_BIT(TIM3->CR1, TIM_CR1_CEN_Pos);
-}
-
-void Timer3_SetCallback(void (*Callback)(void)) {
-    Timer3_Callback = Callback;
 }
 
 void TIM3_IRQHandler(void) {
     /* Check update interrupt flag */
     if (GET_BIT(TIM3->SR, 0U)) {
         /* Clear update interrupt flag */
-        CLEAR_BIT(TIM3->SR, 0U);
+        CLR_BIT(TIM3->SR, 0U);
         
-        if (Timer3_Callback != NULL_PTR) {
-            Timer3_Callback();
-        }
+        /* Set 500ms tick flag to defer processing to the main loop */
+        g_tick_500ms = 1U;
     }
 }

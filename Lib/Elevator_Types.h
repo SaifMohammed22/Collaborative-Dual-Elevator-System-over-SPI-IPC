@@ -2,6 +2,7 @@
 #define ELEVATOR_TYPES_H
 
 #include "Std_Types.h"
+#include <stdint.h>
 
 /* ------------------------------------------------------------------------- */
 /* 1. Enumerations for Readability                                           */

@@ -1,20 +1,18 @@
 #include "Scheduler.h"
-#include "Timer.h"
-#include "Telemetry.h"
+#include "Uart.h"
+#include <stdio.h>
 
-/* Shared elevator states (defined in App layer or IPC layer) */
-extern ElevatorState_t MasterElevator;
-extern ElevatorState_t SlaveElevator;
-
-static void Scheduler_PeriodicTask(void) {
-    /* Called exactly every 500ms (2Hz) from TIM3 ISR */
-    Telemetry_SendState(&MasterElevator, &SlaveElevator);
-}
-
-void Scheduler_Init(void) {
-    /* Initialize the timer for 500ms ticks */
-    Timer3_Init();
+void Scheduler_SendTelemetry(ElevatorState_t* master_state, ElevatorState_t* slave_state) {
+    char telemetryBuffer[128];
     
-    /* Link the callback to the Timer3 ISR */
-    Timer3_SetCallback(Scheduler_PeriodicTask);
+    if (master_state == NULL_PTR || slave_state == NULL_PTR) {
+        return;
+    }
+    
+    sprintf(telemetryBuffer, 
+            "Elevator A: Floor %d State %d | Elevator B: Floor %d State %d\r\n",
+            master_state->current_floor, master_state->state,
+            slave_state->current_floor, slave_state->state);
+            
+    Uart_SendString(telemetryBuffer);
 }
