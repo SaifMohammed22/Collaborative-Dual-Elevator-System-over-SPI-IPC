@@ -28,6 +28,14 @@
 static volatile uint8 g_CurrentFloor = 1U;
 
 /* =================================================================== */
+/*  EXTI Callbacks                                                     */
+/* =================================================================== */
+static void Floor1_Cb(void) { g_CurrentFloor = 1U; }
+static void Floor2_Cb(void) { g_CurrentFloor = 2U; }
+static void Floor3_Cb(void) { g_CurrentFloor = 3U; }
+static void Floor4_Cb(void) { g_CurrentFloor = 4U; }
+
+/* =================================================================== */
 /*  Initialisation                                                     */
 /* =================================================================== */
 void FloorSensor_Init(void)
@@ -43,28 +51,30 @@ void FloorSensor_Init(void)
         .AltFunc = 0U
     };
 
-    /* Floor 1 → PB5 */
-    sens_cfg.Pin = 5U;   Gpio_ConfigPin(&sens_cfg);
-    /* Floor 2 → PB6 */
-    sens_cfg.Pin = 6U;   Gpio_ConfigPin(&sens_cfg);
-    /* Floor 3 → PB7 */
-    sens_cfg.Pin = 7U;   Gpio_ConfigPin(&sens_cfg);
-    /* Floor 4 → PB8 */
-    sens_cfg.Pin = 8U;   Gpio_ConfigPin(&sens_cfg);
+    /* Floor 1 → PB12 */
+    sens_cfg.Pin = 12U;  Gpio_ConfigPin(&sens_cfg);
+    /* Floor 2 → PB13 */
+    sens_cfg.Pin = 13U;  Gpio_ConfigPin(&sens_cfg);
+    /* Floor 3 → PB14 */
+    sens_cfg.Pin = 14U;  Gpio_ConfigPin(&sens_cfg);
+    /* Floor 4 → PB15 */
+    sens_cfg.Pin = 15U;  Gpio_ConfigPin(&sens_cfg);
 
-    /* ---- EXTI (SYSCFG clock assumed already enabled by PushButton) */
+    /* ---- EXTI ---------------------------------------------------- */
+    Exti_EnableSysCfgClock();
+
     Exti_CfgType exti;
     exti.Trigger = EXTI_TRIGGER_FALLING;  /* active-low sensors */
     exti.Port    = EXTI_PORT_B;
 
-    exti.Line = 5U;   Exti_ConfigLine(&exti);
-    exti.Line = 6U;   Exti_ConfigLine(&exti);
-    exti.Line = 7U;   Exti_ConfigLine(&exti);
-    exti.Line = 8U;   Exti_ConfigLine(&exti);
+    exti.Line = 12U;  Exti_ConfigLine(&exti);  Exti_SetCallback(12U, Floor1_Cb);
+    exti.Line = 13U;  Exti_ConfigLine(&exti);  Exti_SetCallback(13U, Floor2_Cb);
+    exti.Line = 14U;  Exti_ConfigLine(&exti);  Exti_SetCallback(14U, Floor3_Cb);
+    exti.Line = 15U;  Exti_ConfigLine(&exti);  Exti_SetCallback(15U, Floor4_Cb);
 
     /* ---- NVIC — medium priority (3) ------------------------------ */
-    Nvic_SetPriority(EXTI9_5_IRQn, 3U, 0U);
-    Nvic_EnableIrq(EXTI9_5_IRQn);
+    Nvic_SetPriority(EXTI15_10_IRQn, 3U, 0U);
+    Nvic_EnableIrq(EXTI15_10_IRQn);
 }
 
 /* =================================================================== */
@@ -73,27 +83,4 @@ void FloorSensor_Init(void)
 uint8 FloorSensor_GetCurrentFloor(void)
 {
     return g_CurrentFloor;
-}
-
-/* =================================================================== */
-/*  EXTI9_5 ISR — covers PB5 … PB8                                    */
-/* =================================================================== */
-void EXTI9_5_IRQHandler(void)
-{
-    if (EXTI->PR & (1U << 5U)) {
-        Exti_ClearPending(5U);
-        g_CurrentFloor = 1U;
-    }
-    if (EXTI->PR & (1U << 6U)) {
-        Exti_ClearPending(6U);
-        g_CurrentFloor = 2U;
-    }
-    if (EXTI->PR & (1U << 7U)) {
-        Exti_ClearPending(7U);
-        g_CurrentFloor = 3U;
-    }
-    if (EXTI->PR & (1U << 8U)) {
-        Exti_ClearPending(8U);
-        g_CurrentFloor = 4U;
-    }
 }

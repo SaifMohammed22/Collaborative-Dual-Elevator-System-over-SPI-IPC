@@ -62,4 +62,14 @@ void Exti_ConfigLine(const Exti_CfgType *cfg);
  */
 void Exti_ClearPending(uint8 line);
 
+/**
+ * @brief  Type definition for EXTI callback function pointer.
+ */
+typedef void (*Exti_CallbackType)(void);
+
+/**
+ * @brief  Register a callback for a specific EXTI line (0-15).
+ */
+void Exti_SetCallback(uint8 line, Exti_CallbackType cb);
+
 #endif /* EXTI_H_ */

@@ -21,6 +21,7 @@ set(INCLUDE_LIST ${INCLUDE_LIST}
 
         # --- HAL Layer ---
         ${PROJECT_PATH}/Hal/Cabin_Button
+        ${PROJECT_PATH}/Hal/Hallway_Button
         ${PROJECT_PATH}/Hal/Floor_Sensor
         ${PROJECT_PATH}/Hal/Elevator_Motor
 
@@ -31,6 +32,7 @@ set(INCLUDE_LIST ${INCLUDE_LIST}
         # --- Services ---
         ${PROJECT_PATH}/Services/Ipc_Protocol
         ${PROJECT_PATH}/Services/Telemetry
+        ${PROJECT_PATH}/Services/Debounce
 )
 
 if (USE_HAL)

@@ -36,14 +36,42 @@ static volatile uint8 g_BtnPressed[BTN_COUNT];
 static volatile uint8 g_EmergencyActive;
 
 /* =================================================================== */
+/*  EXTI Callbacks                                                     */
+/* =================================================================== */
+static void Cabin_Floor1_Cb(void)
+{
+    g_BtnPressed[BTN_CABIN_FLOOR1] = TRUE;
+}
+
+static void Cabin_Floor2_Cb(void)
+{
+    g_BtnPressed[BTN_CABIN_FLOOR2] = TRUE;
+}
+
+static void Cabin_Floor3_Cb(void)
+{
+    g_BtnPressed[BTN_CABIN_FLOOR3] = TRUE;
+}
+
+static void Cabin_Floor4_Cb(void)
+{
+    g_BtnPressed[BTN_CABIN_FLOOR4] = TRUE;
+}
+
+static void Cabin_Emergency_Cb(void)
+{
+    g_EmergencyActive  = TRUE;
+    g_BtnPressed[BTN_EMERGENCY_STOP] = TRUE;
+}
+
+/* =================================================================== */
 /*  Initialisation                                                     */
 /* =================================================================== */
 void PushButton_Init(void)
 {
     /* ---- GPIO clocks --------------------------------------------- */
-    Gpio_EnableClock(GPIOA);
-    Gpio_EnableClock(GPIOB);
     Gpio_EnableClock(GPIOC);
+    Gpio_EnableClock(GPIOD);
 
     /* ---- GPIO: input with pull-up -------------------------------- */
     Gpio_CfgType btn_cfg = {
@@ -54,49 +82,51 @@ void PushButton_Init(void)
         .AltFunc = 0U
     };
 
-    /* Cabin Floor 1 — PA0 */
-    btn_cfg.Port = GPIOA;  btn_cfg.Pin = 0U;
+    /* Cabin Floor 1 — PC6 */
+    btn_cfg.Port = GPIOC;  btn_cfg.Pin = 6U;
     Gpio_ConfigPin(&btn_cfg);
 
-    /* Cabin Floor 2 — PA1 */
-    btn_cfg.Port = GPIOA;  btn_cfg.Pin = 1U;
+    /* Cabin Floor 2 — PC7 */
+    btn_cfg.Port = GPIOC;  btn_cfg.Pin = 7U;
     Gpio_ConfigPin(&btn_cfg);
 
-    /* Cabin Floor 3 — PA4 */
-    btn_cfg.Port = GPIOA;  btn_cfg.Pin = 4U;
+    /* Cabin Floor 3 — PC8 */
+    btn_cfg.Port = GPIOC;  btn_cfg.Pin = 8U;
     Gpio_ConfigPin(&btn_cfg);
 
-    /* Cabin Floor 4 — PB2 */
-    btn_cfg.Port = GPIOB;  btn_cfg.Pin = 2U;
+    /* Cabin Floor 4 — PC9 */
+    btn_cfg.Port = GPIOC;  btn_cfg.Pin = 9U;
     Gpio_ConfigPin(&btn_cfg);
 
-    /* Emergency Stop — PC13 */
-    btn_cfg.Port = GPIOC;  btn_cfg.Pin = 13U;
+    /* Emergency Stop — PD11 */
+    btn_cfg.Port = GPIOD;  btn_cfg.Pin = 11U;
     Gpio_ConfigPin(&btn_cfg);
 
     /* ---- EXTI ---------------------------------------------------- */
     Exti_EnableSysCfgClock();
 
-    /* Each button has a dedicated EXTI line — one port per line,
-     * no SYSCFG mux conflicts.                                       */
-
     Exti_CfgType exti;
     exti.Trigger = EXTI_TRIGGER_FALLING;
 
-    /* EXTI0 → PA0 (Floor 1) */
-    exti.Line = 0U;   exti.Port = EXTI_PORT_A;  Exti_ConfigLine(&exti);
+    /* EXTI6 → PC6 (Floor 1) */
+    exti.Line = 6U;   exti.Port = EXTI_PORT_C;  Exti_ConfigLine(&exti);
+    Exti_SetCallback(6U, Cabin_Floor1_Cb);
 
-    /* EXTI1 → PA1 (Floor 2) */
-    exti.Line = 1U;   exti.Port = EXTI_PORT_A;  Exti_ConfigLine(&exti);
+    /* EXTI7 → PC7 (Floor 2) */
+    exti.Line = 7U;   exti.Port = EXTI_PORT_C;  Exti_ConfigLine(&exti);
+    Exti_SetCallback(7U, Cabin_Floor2_Cb);
 
-    /* EXTI4 → PA4 (Floor 3) */
-    exti.Line = 4U;   exti.Port = EXTI_PORT_A;  Exti_ConfigLine(&exti);
+    /* EXTI8 → PC8 (Floor 3) */
+    exti.Line = 8U;   exti.Port = EXTI_PORT_C;  Exti_ConfigLine(&exti);
+    Exti_SetCallback(8U, Cabin_Floor3_Cb);
 
-    /* EXTI2 → PB2 (Floor 4) */
-    exti.Line = 2U;   exti.Port = EXTI_PORT_B;  Exti_ConfigLine(&exti);
+    /* EXTI9 → PC9 (Floor 4) */
+    exti.Line = 9U;   exti.Port = EXTI_PORT_C;  Exti_ConfigLine(&exti);
+    Exti_SetCallback(9U, Cabin_Floor4_Cb);
 
-    /* EXTI13 → PC13 (Emergency Stop) */
-    exti.Line = 13U;  exti.Port = EXTI_PORT_C;  Exti_ConfigLine(&exti);
+    /* EXTI11 → PD11 (Emergency Stop) */
+    exti.Line = 11U;  exti.Port = EXTI_PORT_D;  Exti_ConfigLine(&exti);
+    Exti_SetCallback(11U, Cabin_Emergency_Cb);
 
     /* ---- NVIC ---------------------------------------------------- */
     /* 4 bits pre-emption / 0 sub (grouping = 3) */
@@ -104,16 +134,10 @@ void PushButton_Init(void)
 
     /*  Emergency stop gets pre-emption priority 0 (HIGHEST).
      *  Cabin buttons get priority 5 (comfortably lower).              */
-    Nvic_SetPriority(EXTI0_IRQn,     5U, 0U);
-    Nvic_SetPriority(EXTI1_IRQn,     5U, 0U);
-    Nvic_SetPriority(EXTI2_IRQn,     5U, 0U);
-    Nvic_SetPriority(EXTI4_IRQn,     5U, 0U);
-    Nvic_SetPriority(EXTI15_10_IRQn, 0U, 0U);  /* ← highest for emergency */
+    Nvic_SetPriority(EXTI9_5_IRQn,   5U, 0U);
+    Nvic_SetPriority(EXTI15_10_IRQn, 0U, 0U);  /* ← highest for emergency (line 11 is in 15_10) */
 
-    Nvic_EnableIrq(EXTI0_IRQn);
-    Nvic_EnableIrq(EXTI1_IRQn);
-    Nvic_EnableIrq(EXTI2_IRQn);
-    Nvic_EnableIrq(EXTI4_IRQn);
+    Nvic_EnableIrq(EXTI9_5_IRQn);
     Nvic_EnableIrq(EXTI15_10_IRQn);
 
     /* ---- Clear all flags ----------------------------------------- */
@@ -147,57 +171,4 @@ uint8 PushButton_IsEmergencyActive(void)
 void PushButton_ClearEmergency(void)
 {
     g_EmergencyActive = FALSE;
-}
-
-/* =================================================================== */
-/*  EXTI ISR handlers (weak symbols overridden here)                   */
-/* =================================================================== */
-
-/**
- * @brief  EXTI0 ISR — PA0 (Cabin Floor 1).
- */
-void EXTI0_IRQHandler(void)
-{
-    Exti_ClearPending(0U);
-    g_BtnPressed[BTN_CABIN_FLOOR1] = TRUE;
-}
-
-/**
- * @brief  EXTI2 ISR — PB2 (Cabin Floor 4).
- */
-void EXTI2_IRQHandler(void)
-{
-    Exti_ClearPending(2U);
-    g_BtnPressed[BTN_CABIN_FLOOR4] = TRUE;
-}
-
-/**
- * @brief  EXTI1 ISR — PA1 (Floor 2).
- */
-void EXTI1_IRQHandler(void)
-{
-    Exti_ClearPending(1U);
-    g_BtnPressed[BTN_CABIN_FLOOR2] = TRUE;
-}
-
-/**
- * @brief  EXTI4 ISR — PA4 (Floor 3).
- */
-void EXTI4_IRQHandler(void)
-{
-    Exti_ClearPending(4U);
-    g_BtnPressed[BTN_CABIN_FLOOR3] = TRUE;
-}
-
-/**
- * @brief  EXTI15_10 ISR — PC13 (Emergency Stop).
- *         Highest pre-emption priority — cannot be interrupted.
- */
-void EXTI15_10_IRQHandler(void)
-{
-    if (EXTI->PR & (1U << 13U)) {
-        Exti_ClearPending(13U);
-        g_EmergencyActive  = TRUE;
-        g_BtnPressed[BTN_EMERGENCY_STOP] = TRUE;
-    }
 }
