@@ -30,6 +30,7 @@ set(INCLUDE_LIST ${INCLUDE_LIST}
 
         # --- Services ---
         ${PROJECT_PATH}/Services/Ipc_Protocol
+        ${PROJECT_PATH}/Services/Scheduler
         ${PROJECT_PATH}/Services/Telemetry
 )
 
