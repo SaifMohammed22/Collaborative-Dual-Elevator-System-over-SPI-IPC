@@ -20,7 +20,7 @@ set(INCLUDE_LIST ${INCLUDE_LIST}
         ${PROJECT_PATH}/Mcal/Dma
 
         # --- HAL Layer ---
-        ${PROJECT_PATH}/Hal/Push_Button
+        ${PROJECT_PATH}/Hal/Cabin_Button
         ${PROJECT_PATH}/Hal/Floor_Sensor
         ${PROJECT_PATH}/Hal/Elevator_Motor
 
@@ -29,8 +29,8 @@ set(INCLUDE_LIST ${INCLUDE_LIST}
         ${PROJECT_PATH}/App/Dispatcher
 
         # --- Services ---
-        ${PROJECT_PATH}/Services/Scheduler
         ${PROJECT_PATH}/Services/Ipc_Protocol
+        ${PROJECT_PATH}/Services/Telemetry
 )
 
 if (USE_HAL)
