@@ -318,6 +318,21 @@ typedef enum {
 #define RCC_APB1ENR_TIM3EN_Pos    1U
 #define RCC_APB1ENR_TIM4EN_Pos    2U
 #define RCC_APB1ENR_TIM5EN_Pos    3U
+#define RCC_APB1ENR_USART2EN_Pos  17U
+
+/* USART CR1 */
+#define USART_CR1_TE              (1U << 3U)
+#define USART_CR1_UE              (1U << 13U)
+
+/* USART SR */
+#define USART_SR_TXE_Pos          7U
+#define USART_SR_TC_Pos           6U
+
+/* TIM DIER */
+#define TIM_DIER_UIE_Pos          0U
+
+/* TIM SR */
+#define TIM_SR_UIF_Pos            0U
 
 /* TIM CR1 */
 #define TIM_CR1_CEN_Pos           0U

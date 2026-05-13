@@ -18,6 +18,7 @@
 #define ELEVATOR_FSM_H_
 
 #include "Std_Types.h"
+#include "Elevator_Types.h"
 
 /* ------------------------------------------------------------------ */
 /*  FSM states (public so the scheduler / debug can inspect)           */
@@ -68,5 +69,10 @@ void ElevatorFsm_Run(void);
  * @brief  Return the current FSM state (for debug / telemetry).
  */
 ElevatorFsm_StateType ElevatorFsm_GetState(void);
+
+/**
+ * @brief  Populates the given state struct with live FSM data.
+ */
+void ElevatorFsm_GetLiveState(ElevatorState_t* out_state);
 
 #endif /* ELEVATOR_FSM_H_ */

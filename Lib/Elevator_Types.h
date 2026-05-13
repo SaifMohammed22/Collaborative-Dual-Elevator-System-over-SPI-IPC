@@ -2,7 +2,6 @@
 #define ELEVATOR_TYPES_H
 
 #include "Std_Types.h"
-#include <stdint.h>
 
 /* ------------------------------------------------------------------------- */
 /* 1. Enumerations for Readability                                           */
@@ -28,13 +27,13 @@ typedef enum {
 /* ------------------------------------------------------------------------- */
 
 /* * This is the struct you will use in Part 3 for your Dispatcher algorithm.
- * It strictly uses uint8_t to ensure easy 1-to-1 mapping into the SPI array.
+ * It strictly uses uint8 to ensure easy 1-to-1 mapping into the SPI array.
  */
 typedef struct {
-    uint8_t current_floor;  /* Valid range: 1, 2, 3, or 4 */
-    uint8_t target_floor;   /* Valid range: 1, 2, 3, 4 (0 means NO_TARGET) */
+    uint8 current_floor;  /* Valid range: 1, 2, 3, or 4 */
+    uint8 target_floor;   /* Valid range: 1, 2, 3, 4 (0 means NO_TARGET) */
     Elev_Fsm_State_t state; /* Current physical FSM state */
-    uint8_t system_flags;   /* Bitmask using the FLAG_ macros above */
+    uint8 system_flags;   /* Bitmask using the FLAG_ macros above */
 } ElevatorState_t;
 
 
@@ -47,11 +46,11 @@ typedef struct {
  * struct is EXACTLY 8 bytes long for the physical SPI transmission.
  */
 typedef struct __attribute__((packed)) {
-    uint8_t header;         /* MUST be 0xA5 per the packet diagram */
+    uint8 header;         /* MUST be 0xA5 per the packet diagram */
     ElevatorState_t data;   /* The 4-byte application state defined above */
-    uint8_t reserved_1;     /* Padding: 0x00 */
-    uint8_t reserved_2;     /* Padding: 0x00 */
-    uint8_t checksum;       /* XOR of bytes 0 through 6 */
+    uint8 reserved_1;     /* Padding: 0x00 */
+    uint8 reserved_2;     /* Padding: 0x00 */
+    uint8 checksum;       /* XOR of bytes 0 through 6 */
 } Ipc_SpiFrame_t;
 
 #endif /* ELEVATOR_TYPES_H */

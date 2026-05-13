@@ -10,6 +10,6 @@ typedef enum {
 } Direction_t;
 
 /* Entry point for the task allocation algorithm */
-void Dispatch_Call(uint8_t requested_floor, Direction_t requested_dir);
+void Dispatch_Call(uint8 requested_floor, Direction_t requested_dir);
 
 #endif /* DISPATCHER_H_ */

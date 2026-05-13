@@ -235,3 +235,18 @@ void ElevatorFsm_Run(void) {
 /*  State query                                                        */
 /* =================================================================== */
 ElevatorFsm_StateType ElevatorFsm_GetState(void) { return g_State; }
+
+void ElevatorFsm_GetLiveState(ElevatorState_t* out_state) {
+    if (out_state == NULL_PTR) {
+        return;
+    }
+    
+    out_state->current_floor = FloorSensor_GetCurrentFloor();
+    out_state->target_floor = Target_Floor;
+    out_state->state = (Elev_Fsm_State_t)g_State;
+    
+    out_state->system_flags = FLAG_NORMAL;
+    if (PushButton_IsEmergencyActive()) {
+        out_state->system_flags |= FLAG_EMERGENCY_STOP;
+    }
+}
