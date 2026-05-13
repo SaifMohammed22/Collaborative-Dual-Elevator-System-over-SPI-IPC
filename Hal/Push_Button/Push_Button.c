@@ -3,18 +3,19 @@
 #include "Exti.h"
 #include "Nvic.h"
 #include "Critical_Section.h"
+#include "Floor_Sensor.h"
 
 /* =================================================================== */
 /*  Volatile ISR ↔ main-loop shared flags                              */
 /* =================================================================== */
-static volatile uint8 g_BtnPressed[11];
-static volatile uint8 g_EmergencyActive;
+static volatile boolean g_BtnPressed[BTN_COUNT];
+static volatile boolean g_EmergencyActive;
 
 /* =================================================================== */
 /*  Software Debounce State                                            */
 /* =================================================================== */
 extern volatile uint32 g_SysTick_Ms;
-static uint32 last_interrupt_time[11] = {0};
+static uint32 last_interrupt_time[BTN_COUNT] = {0};
 
 static uint32 Tick_GetMs(void) {
     return g_SysTick_Ms;
@@ -106,7 +107,7 @@ void PushButton_Init(void)
     Nvic_EnableIrq(EXTI15_10_IRQn);
 
     /* ---- Clear all flags ----------------------------------------- */
-    for (uint8 i = 0U; i < 11U; i++) {
+    for (uint8 i = 0U; i < BTN_COUNT; i++) {
         g_BtnPressed[i] = FALSE;
         last_interrupt_time[i] = 0U;
     }
@@ -116,20 +117,20 @@ void PushButton_Init(void)
 /* =================================================================== */
 /*  Flag access (main-loop side)                                       */
 /* =================================================================== */
-uint8 PushButton_GetAndClear(PushButton_IdType id)
+boolean PushButton_GetAndClear(PushButton_IdType id)
 {
     if (id >= BTN_COUNT) { return FALSE; }
 
     /* Atomic read-then-clear inside a critical section */
     ENTER_CRITICAL();
-    uint8 was_pressed = g_BtnPressed[id];
+    boolean was_pressed = g_BtnPressed[id];
     g_BtnPressed[id] = FALSE;
     EXIT_CRITICAL();
 
     return was_pressed;
 }
 
-uint8 PushButton_IsEmergencyActive(void)
+boolean PushButton_IsEmergencyActive(void)
 {
     return g_EmergencyActive;
 }
@@ -191,7 +192,7 @@ void EXTI4_IRQHandler(void)
 void EXTI9_5_IRQHandler(void)
 {
     /* Hallway D4 (PB5) */
-    if (EXTI->PR & (1U << 5U)) {
+    if (Exti_IsPending(5U)) {
         Exti_ClearPending(5U);
         if ((Tick_GetMs() - last_interrupt_time[BTN_HALLWAY_D4]) > 50U) {
             g_BtnPressed[BTN_HALLWAY_D4] = TRUE;
@@ -199,7 +200,7 @@ void EXTI9_5_IRQHandler(void)
         }
     }
     /* Cabin Floor 1 (PC6) */
-    if (EXTI->PR & (1U << 6U)) {
+    if (Exti_IsPending(6U)) {
         Exti_ClearPending(6U);
         if ((Tick_GetMs() - last_interrupt_time[BTN_CABIN_FLOOR1]) > 50U) {
             g_BtnPressed[BTN_CABIN_FLOOR1] = TRUE;
@@ -207,7 +208,7 @@ void EXTI9_5_IRQHandler(void)
         }
     }
     /* Cabin Floor 2 (PC7) */
-    if (EXTI->PR & (1U << 7U)) {
+    if (Exti_IsPending(7U)) {
         Exti_ClearPending(7U);
         if ((Tick_GetMs() - last_interrupt_time[BTN_CABIN_FLOOR2]) > 50U) {
             g_BtnPressed[BTN_CABIN_FLOOR2] = TRUE;
@@ -215,7 +216,7 @@ void EXTI9_5_IRQHandler(void)
         }
     }
     /* Cabin Floor 3 (PC8) */
-    if (EXTI->PR & (1U << 8U)) {
+    if (Exti_IsPending(8U)) {
         Exti_ClearPending(8U);
         if ((Tick_GetMs() - last_interrupt_time[BTN_CABIN_FLOOR3]) > 50U) {
             g_BtnPressed[BTN_CABIN_FLOOR3] = TRUE;
@@ -223,7 +224,7 @@ void EXTI9_5_IRQHandler(void)
         }
     }
     /* Cabin Floor 4 (PC9) */
-    if (EXTI->PR & (1U << 9U)) {
+    if (Exti_IsPending(9U)) {
         Exti_ClearPending(9U);
         if ((Tick_GetMs() - last_interrupt_time[BTN_CABIN_FLOOR4]) > 50U) {
             g_BtnPressed[BTN_CABIN_FLOOR4] = TRUE;
@@ -235,12 +236,33 @@ void EXTI9_5_IRQHandler(void)
 void EXTI15_10_IRQHandler(void)
 {
     /* Emergency Stop (PD11) */
-    if (EXTI->PR & (1U << 11U)) {
+    if (Exti_IsPending(11U)) {
         Exti_ClearPending(11U);
         if ((Tick_GetMs() - last_interrupt_time[BTN_EMERGENCY_STOP]) > 50U) {
             g_EmergencyActive = TRUE;
             g_BtnPressed[BTN_EMERGENCY_STOP] = TRUE;
             last_interrupt_time[BTN_EMERGENCY_STOP] = Tick_GetMs();
         }
+    }
+    
+    /* Floor Sensor 1 (PB12) */
+    if (Exti_IsPending(12U)) {
+        Exti_ClearPending(12U);
+        FloorSensor_SetCurrentFloor(1U);
+    }
+    /* Floor Sensor 2 (PB13) */
+    if (Exti_IsPending(13U)) {
+        Exti_ClearPending(13U);
+        FloorSensor_SetCurrentFloor(2U);
+    }
+    /* Floor Sensor 3 (PB14) */
+    if (Exti_IsPending(14U)) {
+        Exti_ClearPending(14U);
+        FloorSensor_SetCurrentFloor(3U);
+    }
+    /* Floor Sensor 4 (PB15) */
+    if (Exti_IsPending(15U)) {
+        Exti_ClearPending(15U);
+        FloorSensor_SetCurrentFloor(4U);
     }
 }

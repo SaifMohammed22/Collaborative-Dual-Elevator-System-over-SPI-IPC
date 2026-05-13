@@ -37,13 +37,13 @@ void PushButton_Init(void);
  * @param  id   Button identifier.
  * @return TRUE if the button was pressed since the last call, FALSE otherwise.
  */
-uint8 PushButton_GetAndClear(PushButton_IdType id);
+boolean PushButton_GetAndClear(PushButton_IdType id);
 
 /**
  * @brief  Directly read the emergency-stop flag (volatile).
  * @return TRUE if the emergency stop is active.
  */
-uint8 PushButton_IsEmergencyActive(void);
+boolean PushButton_IsEmergencyActive(void);
 
 /**
  * @brief  Clear the emergency-stop flag.

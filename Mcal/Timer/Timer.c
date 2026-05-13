@@ -3,7 +3,7 @@
 #include "Bit_Operations.h"
 #include "Nvic.h"
 
-volatile uint8 g_tick_500ms = 0U;
+volatile boolean g_tick_500ms = FALSE;
 
 void Timer_Init_TIM3_500ms(uint32 sys_clock_freq) {
     /* Enable TIM3 Clock */
@@ -33,6 +33,13 @@ void TIM3_IRQHandler(void) {
         CLR_BIT(TIM3->SR, TIM_SR_UIF_Pos);
         
         /* Set 500ms tick flag to defer processing to the main loop */
-        g_tick_500ms = 1U;
+        g_tick_500ms = TRUE;
     }
+}
+
+void Timer_Init_SysTick(uint32 sys_clock_freq) {
+    SysTick->LOAD = (sys_clock_freq / 1000U) - 1U;
+    SysTick->VAL = 0U;
+    /* CLKSOURCE = 1 (Processor clock), TICKINT = 1, ENABLE = 1 */
+    SysTick->CTRL = (1U << 2U) | (1U << 1U) | (1U << 0U); 
 }

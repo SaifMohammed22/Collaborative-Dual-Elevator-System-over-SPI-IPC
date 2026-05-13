@@ -62,4 +62,11 @@ void Exti_ConfigLine(const Exti_CfgType *cfg);
  */
 void Exti_ClearPending(uint8 line);
 
+/**
+ * @brief  Check if the pending bit for a specific EXTI line is set.
+ * @param  line   The EXTI line number (0..15).
+ * @return TRUE if the pending bit is set, FALSE otherwise.
+ */
+boolean Exti_IsPending(uint8 line);
+
 #endif /* EXTI_H_ */

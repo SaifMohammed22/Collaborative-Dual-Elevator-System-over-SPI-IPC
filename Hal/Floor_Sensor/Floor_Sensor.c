@@ -3,15 +3,14 @@
  * @brief   HAL — Floor-sensor implementation.
  *
  * ┌──────────────────────────────────────────────────────────────┐
- * │  Default Pin Mapping  (active-low, pull-up enabled)         │
+ * │  Conflict-Free Pin Mapping (active-low, pull-up enabled)    │
  * │                                                              │
- * │  Floor 1 sensor  →  PB5   (EXTI5)                           │
- * │  Floor 2 sensor  →  PB6   (EXTI6)                           │
- * │  Floor 3 sensor  →  PB7   (EXTI7)                           │
- * │  Floor 4 sensor  →  PB8   (EXTI8)                           │
+ * │  Floor 1 sensor  →  PB12  (EXTI12)                          │
+ * │  Floor 2 sensor  →  PB13  (EXTI13)                          │
+ * │  Floor 3 sensor  →  PB14  (EXTI14)                          │
+ * │  Floor 4 sensor  →  PB15  (EXTI15)                          │
  * │                                                              │
- * │  All four lines share EXTI9_5_IRQn.                         │
- * │  Adjust the mapping below to match your PCB.                │
+ * │  All four lines share EXTI15_10_IRQn (Consolidated).        │
  * └──────────────────────────────────────────────────────────────┘
  */
 
@@ -43,59 +42,41 @@ void FloorSensor_Init(void)
         .AltFunc = 0U
     };
 
-    /* Floor 1 → PB5 */
-    sens_cfg.Pin = 5U;   Gpio_ConfigPin(&sens_cfg);
-    /* Floor 2 → PB6 */
-    sens_cfg.Pin = 6U;   Gpio_ConfigPin(&sens_cfg);
-    /* Floor 3 → PB7 */
-    sens_cfg.Pin = 7U;   Gpio_ConfigPin(&sens_cfg);
-    /* Floor 4 → PB8 */
-    sens_cfg.Pin = 8U;   Gpio_ConfigPin(&sens_cfg);
+    /* Floor 1 → PB12 */
+    sens_cfg.Pin = 12U;   Gpio_ConfigPin(&sens_cfg);
+    /* Floor 2 → PB13 */
+    sens_cfg.Pin = 13U;   Gpio_ConfigPin(&sens_cfg);
+    /* Floor 3 → PB14 */
+    sens_cfg.Pin = 14U;   Gpio_ConfigPin(&sens_cfg);
+    /* Floor 4 → PB15 */
+    sens_cfg.Pin = 15U;   Gpio_ConfigPin(&sens_cfg);
 
     /* ---- EXTI (SYSCFG clock assumed already enabled by PushButton) */
     Exti_CfgType exti;
     exti.Trigger = EXTI_TRIGGER_FALLING;  /* active-low sensors */
     exti.Port    = EXTI_PORT_B;
 
-    exti.Line = 5U;   Exti_ConfigLine(&exti);
-    exti.Line = 6U;   Exti_ConfigLine(&exti);
-    exti.Line = 7U;   Exti_ConfigLine(&exti);
-    exti.Line = 8U;   Exti_ConfigLine(&exti);
-
-    /* ---- NVIC — medium priority (3) ------------------------------ */
-    Nvic_SetPriority(EXTI9_5_IRQn, 3U, 0U);
-    Nvic_EnableIrq(EXTI9_5_IRQn);
+    exti.Line = 12U;   Exti_ConfigLine(&exti);
+    exti.Line = 13U;   Exti_ConfigLine(&exti);
+    exti.Line = 14U;   Exti_ConfigLine(&exti);
+    exti.Line = 15U;   Exti_ConfigLine(&exti);
+    
+    /* NOTE: EXTI15_10_IRQn is enabled and configured by Push_Button.c
+     * because it shares the line with the Emergency Stop (PD11).
+     */
 }
 
 /* =================================================================== */
-/*  Getter                                                             */
+/*  Getter and Setter                                                  */
 /* =================================================================== */
 uint8 FloorSensor_GetCurrentFloor(void)
 {
     return g_CurrentFloor;
 }
 
-/* =================================================================== */
-/*  EXTI9_5 ISR — covers PB5 … PB8                                    */
-/* =================================================================== */
-#if 0
-void EXTI9_5_IRQHandler(void)
+void FloorSensor_SetCurrentFloor(uint8 floor_num)
 {
-    if (EXTI->PR & (1U << 5U)) {
-        Exti_ClearPending(5U);
-        g_CurrentFloor = 1U;
-    }
-    if (EXTI->PR & (1U << 6U)) {
-        Exti_ClearPending(6U);
-        g_CurrentFloor = 2U;
-    }
-    if (EXTI->PR & (1U << 7U)) {
-        Exti_ClearPending(7U);
-        g_CurrentFloor = 3U;
-    }
-    if (EXTI->PR & (1U << 8U)) {
-        Exti_ClearPending(8U);
-        g_CurrentFloor = 4U;
+    if (floor_num >= 1U && floor_num <= 4U) {
+        g_CurrentFloor = floor_num;
     }
 }
-#endif
