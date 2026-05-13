@@ -50,3 +50,12 @@ void Exti_ClearPending(uint8 line)
     /* Write 1 to clear (rc_w1) */
     EXTI->PR = (1U << line);
 }
+
+/* ------------------------------------------------------------------ */
+boolean Exti_IsPending(uint8 line)
+{
+    if (EXTI->PR & (1U << line)) {
+        return TRUE;
+    }
+    return FALSE;
+}

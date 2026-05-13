@@ -29,11 +29,15 @@
 void FloorSensor_Init(void);
 
 /**
- * @brief  Return the last-detected floor (1 – 4), or FLOOR_UNKNOWN.
- *
- * The value is updated asynchronously by the EXTI ISR each time
- * a floor sensor is triggered.
+ * @brief  Getter for the last detected floor.
+ * @return 1..4 corresponding to the floor number.
  */
 uint8 FloorSensor_GetCurrentFloor(void);
+
+/**
+ * @brief  Setter for the current floor (called from EXTI ISR).
+ * @param  floor_num The detected floor number (1..4).
+ */
+void FloorSensor_SetCurrentFloor(uint8 floor_num);
 
 #endif /* FLOOR_SENSOR_H_ */
