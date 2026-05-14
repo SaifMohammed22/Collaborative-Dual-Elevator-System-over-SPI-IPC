@@ -17,9 +17,9 @@
 /* ------------------------------------------------------------------ */
 /*  Speed presets (percentage of max duty cycle)                       */
 /* ------------------------------------------------------------------ */
-#define MOTOR_SPEED_STOP     0U      /* 0 %   — cabin stationary      */
-#define MOTOR_SPEED_SLOW    20U      /* 20 %  — approaching target     */
-#define MOTOR_SPEED_FULL   100U      /* 100 % — full speed transit     */
+#define MOTOR_SPEED_STOP     0U      /* 0/10  — cabin stationary      */
+#define MOTOR_SPEED_SLOW     2U      /* 2/10  — approaching target     */
+#define MOTOR_SPEED_FULL    10U      /* 10/10 — full speed transit     */
 
 /* ------------------------------------------------------------------ */
 /*  API                                                                */
@@ -32,11 +32,14 @@
 void ElevatorMotor_Init(void);
 
 /**
- * @brief  Set the motor speed to a percentage 0 – 100.
- * @param  speed_pct  0 = stop, 20 = slow, 100 = full.
- *
- * Internally maps the percentage to the timer CCR value.
+ * @brief  Set the motor speed duty cycle (0-10).
+ * @param  speed_pct  0 = stop, 2 = slow, 10 = full.
  */
 void Elevator_SetSpeed(uint8 speed_pct);
+
+/**
+ * @brief  Software PWM tick function to be called every 1ms.
+ */
+void ElevatorMotor_SoftwarePwmTick(void);
 
 #endif /* ELEVATOR_MOTOR_H_ */

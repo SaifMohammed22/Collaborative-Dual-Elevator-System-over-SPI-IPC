@@ -37,6 +37,8 @@
 #define GPIOE_BASE            (AHB1PERIPH_BASE + 0x1000U)
 #define GPIOH_BASE            (AHB1PERIPH_BASE + 0x1C00U)
 #define RCC_BASE              (AHB1PERIPH_BASE + 0x3800U)
+#define DMA1_BASE             (AHB1PERIPH_BASE + 0x6000U)
+#define DMA2_BASE             (AHB1PERIPH_BASE + 0x6400U)
 
 /* Core Peripherals */
 #define SCS_BASE              0xE000E000U
@@ -203,7 +205,35 @@ typedef struct {
     volatile uint32 GTPR;
 } USART_TypeDef;
 
-/* ------------------------------------------------------------------------- */
+/* DMA Stream */
+typedef struct {
+    volatile uint32 CR;
+    volatile uint32 NDTR;
+    volatile uint32 PAR;
+    volatile uint32 M0AR;
+    volatile uint32 M1AR;
+    volatile uint32 FCR;
+} DMA_Stream_TypeDef;
+
+/* DMA Controller */
+typedef struct {
+    volatile uint32 LISR;
+    volatile uint32 HISR;
+    volatile uint32 LIFCR;
+    volatile uint32 HIFCR;
+} DMA_TypeDef;
+
+/* DMA stream base offsets (each stream is 0x18 bytes, starting at 0x10) */
+#define DMA1_Stream0        ((DMA_Stream_TypeDef *)(DMA1_BASE + 0x010U))
+#define DMA1_Stream1        ((DMA_Stream_TypeDef *)(DMA1_BASE + 0x028U))
+#define DMA1_Stream2        ((DMA_Stream_TypeDef *)(DMA1_BASE + 0x040U))
+#define DMA1_Stream3        ((DMA_Stream_TypeDef *)(DMA1_BASE + 0x058U))
+#define DMA1_Stream4        ((DMA_Stream_TypeDef *)(DMA1_BASE + 0x070U))
+#define DMA1_Stream5        ((DMA_Stream_TypeDef *)(DMA1_BASE + 0x088U))
+#define DMA1_Stream6        ((DMA_Stream_TypeDef *)(DMA1_BASE + 0x0A0U))
+#define DMA1_Stream7        ((DMA_Stream_TypeDef *)(DMA1_BASE + 0x0B8U))
+
+/* -------------------------------------------------------------------------*/
 /* Peripheral Pointers                                                       */
 /* ------------------------------------------------------------------------- */
 #define GPIOA               ((GPIO_TypeDef *) GPIOA_BASE)
@@ -227,6 +257,7 @@ typedef struct {
 
 #define SPI1                ((SPI_TypeDef *) SPI1_BASE)
 #define USART2              ((USART_TypeDef *) USART2_BASE)
+#define DMA1                ((DMA_TypeDef *) DMA1_BASE)
 
 /* ------------------------------------------------------------------------- */
 /* Interrupt Numbers (IRQn_Type)                                             */
@@ -309,6 +340,8 @@ typedef enum {
 #define RCC_AHB1ENR_GPIODEN_Pos   3U
 #define RCC_AHB1ENR_GPIOEEN_Pos   4U
 #define RCC_AHB1ENR_GPIOHEN_Pos   7U
+#define RCC_AHB1ENR_DMA1EN_Pos   21U
+#define RCC_AHB1ENR_DMA2EN_Pos   22U
 
 /* RCC APB2ENR */
 #define RCC_APB2ENR_SYSCFGEN_Pos  14U
@@ -323,6 +356,9 @@ typedef enum {
 /* USART CR1 */
 #define USART_CR1_TE              (1U << 3U)
 #define USART_CR1_UE              (1U << 13U)
+
+/* USART CR3 */
+#define USART_CR3_DMAT_Pos        7U
 
 /* USART SR */
 #define USART_SR_TXE_Pos          7U

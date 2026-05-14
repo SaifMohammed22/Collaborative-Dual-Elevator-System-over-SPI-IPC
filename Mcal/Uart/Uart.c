@@ -2,6 +2,7 @@
 #include "Mcu_Hw.h"
 #include "Bit_Operations.h"
 #include "Gpio.h"
+#include "Dma.h"
 
 void Uart_Init_USART2_115200(uint32 pclk_freq) {
     /* 1. Enable USART2 Clock */
@@ -39,4 +40,9 @@ void Uart_SendString(const char* str) {
     }
     /* Wait until TC (Transmission complete) is set */
     while (!GET_BIT(USART2->SR, USART_SR_TC_Pos));
+}
+
+void Uart_SendString_DMA(const char* str, uint16 len) {
+    if (str == NULL_PTR || len == 0U) { return; }
+    Dma_Uart2Tx_Start((const uint8*)str, len);
 }

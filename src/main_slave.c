@@ -1,5 +1,7 @@
 /* Enable slave firmware by default on this branch */
 #include "Std_Types.h"
+#include "Mcu_Hw.h"
+#include "Bit_Operations.h"
 
 #define TURN_OFF_SLAVE 0U  /* Set to 1 to turn off, 0 to enable */
 
@@ -8,27 +10,52 @@
 #include "Scheduler.h"
 #include "Elevator_Types.h"
 #include "Critical_Section.h"
+#include "Timer.h"
+#include "Elevator_Fsm.h"
+#include "Push_Button.h"
+#include "Elevator_Motor.h"
+#include "Floor_Sensor.h"
 
 extern ElevatorState_t MasterElevator;
 extern ElevatorState_t SlaveElevator;
+
+/* System Clock Frequency */
+#define SYS_CLOCK_FREQ  16000000U /* 16 MHz HSI */
 
 volatile uint32 g_SysTick_Ms = 0U;
 
 void SysTick_Handler(void) {
     g_SysTick_Ms++;
+    ElevatorMotor_SoftwarePwmTick();
 }
 
 int main(void) {
     #if TURN_OFF_SLAVE
         while (1) { }
     #else
-        /* Initialize as a slave and respond to master's 50ms exchanges */
+        /* ---- Peripheral Initialisation ---- */
+        SysTick->LOAD = (SYS_CLOCK_FREQ / 1000U) - 1U;
+        SysTick->VAL  = 0U;
+        SysTick->CTRL = (1U << 2U) | (1U << 1U) | (1U << 0U);
         Spi_InitSlave();
-        Scheduler_Init_50ms(16000000U);
+        Scheduler_Init_50ms(SYS_CLOCK_FREQ);
 
+        PushButton_Init();
+        ElevatorMotor_Init();
+        FloorSensor_Init();
+        ElevatorFsm_Init();
+
+        /* ---- Infinite loop ---- */
         while (1) {
+            /* Run the FSM every iteration (non-blocking) */
+            ElevatorFsm_Run();
+
+            /* Periodic IPC exchange every 50ms */
             if (g_tick_50ms) {
                 g_tick_50ms = 0U;
+
+                /* Snapshot live FSM state into the SlaveElevator struct */
+                ElevatorFsm_GetLiveState(&SlaveElevator);
 
                 Ipc_SpiFrame_t txFrame;
                 Ipc_SpiFrame_t rxFrame;
@@ -39,6 +66,19 @@ int main(void) {
                 if (Ipc_VerifyFrame(&rxFrame)) {
                     ENTER_CRITICAL();
                     MasterElevator = rxFrame.data;
+                    SlaveElevator.system_flags &= ~FLAG_COMM_FAULT;
+
+                    /* Extract Dispatcher command from reserved_1 byte.
+                     * Accept unconditionally — the Master's Dispatcher has
+                     * already validated the assignment (including Tier 1
+                     * Perfect Match intercepts while moving).              */
+                    if (rxFrame.reserved_1 != 0U) {
+                        Target_Floor = rxFrame.reserved_1;
+                    }
+                    EXIT_CRITICAL();
+                } else {
+                    ENTER_CRITICAL();
+                    SlaveElevator.system_flags |= FLAG_COMM_FAULT;
                     EXIT_CRITICAL();
                 }
             }

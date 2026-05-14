@@ -107,26 +107,19 @@ void ElevatorFsm_Run(void) {
   case FSM_STATE_IDLE:
     /* ============================================================== */
     {
-      /* ===================================================================
-       * INTEGRATION WARNING (For Part 2 & 3)
-       * ===================================================================
-       * 1. In standalone mode, the FSM consumes button presses directly
-       *    for local testing.
-       * 2. During full system integration, this loop must be commented out
-       *    (or STANDALONE_TESTING_MODE undefined).
-       * 3. The SPI Bridge (Part 2) must be the one to read
-       *    PushButton_GetAndClear(), transmit it to the Dispatcher (Part 3),
-       *    and the Dispatcher will then write the final decision to
-       *    Target_Floor.
-       * =================================================================== */
-#ifdef STANDALONE_TESTING_MODE
-      /* Consume any pending cabin-button presses → set Target_Floor */
+      /* ---------------------------------------------------------------
+       * Native cabin-button consumption.
+       * Each elevator locally reads its own cabin buttons (PC6-PC9).
+       * Target_Floor is only written when no active assignment exists
+       * (== 0), so Dispatcher-assigned targets are never overwritten.
+       * --------------------------------------------------------------- */
       for (uint8 f = 0U; f < 4U; f++) {
-        if (PushButton_GetAndClear((PushButton_IdType)f)) {
-          Target_Floor = f + 1U; /* buttons are 0-indexed */
+        if (PushButton_GetAndClear((PushButton_IdType)(BTN_CABIN_FLOOR1 + f))) {
+          if (Target_Floor == 0U) {
+            Target_Floor = f + 1U; /* cabin buttons map to floors 1-4 */
+          }
         }
       }
-#endif /* STANDALONE_TESTING_MODE */
 
       /* Nothing to do if target is unknown or already at target */
       if ((Target_Floor == 0U) || (Target_Floor == current)) {
