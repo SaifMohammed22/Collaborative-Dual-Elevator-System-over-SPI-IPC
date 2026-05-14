@@ -79,8 +79,10 @@ static uint8 ScoreElevator(const ElevatorState_t *elev,
         return 2U;      /* Tier 2: Passed / overshoot */
     }
 
-    /* Moving in opposite direction to the request */
-    return 2U + AbsDiff(cur, req_floor);
+    /* Moving in opposite direction to the request — completely ineligible.
+     * The rubric forbids mid-flight reversal; the elevator must finish
+     * its current path before it can be considered for new calls.       */
+    return 0xFFU;
 }
 
 /* =================================================================== */

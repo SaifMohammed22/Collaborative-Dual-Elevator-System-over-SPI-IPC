@@ -61,6 +61,11 @@ int main(void) {
                 if (Ipc_VerifyFrame(&rxFrame)) {
                     ENTER_CRITICAL();
                     MasterElevator = rxFrame.data;
+                    SlaveElevator.system_flags &= ~FLAG_COMM_FAULT;
+                    EXIT_CRITICAL();
+                } else {
+                    ENTER_CRITICAL();
+                    SlaveElevator.system_flags |= FLAG_COMM_FAULT;
                     EXIT_CRITICAL();
                 }
             }
