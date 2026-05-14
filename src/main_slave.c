@@ -63,8 +63,11 @@ int main(void) {
                     MasterElevator = rxFrame.data;
                     SlaveElevator.system_flags &= ~FLAG_COMM_FAULT;
 
-                    /* Extract Dispatcher command from reserved_1 byte */
-                    if (rxFrame.reserved_1 != 0U && Target_Floor == 0U) {
+                    /* Extract Dispatcher command from reserved_1 byte.
+                     * Accept unconditionally — the Master's Dispatcher has
+                     * already validated the assignment (including Tier 1
+                     * Perfect Match intercepts while moving).              */
+                    if (rxFrame.reserved_1 != 0U) {
                         Target_Floor = rxFrame.reserved_1;
                     }
                     EXIT_CRITICAL();
