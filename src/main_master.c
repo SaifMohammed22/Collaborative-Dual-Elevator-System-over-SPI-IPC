@@ -1,6 +1,7 @@
 #include "Std_Types.h"
 #include "Mcu_Hw.h"
 #include "Bit_Operations.h"
+#include "Nvic.h"
 #include "Timer.h"
 #include "Uart.h"
 #include "Telemetry.h"
@@ -28,6 +29,17 @@ volatile uint32 g_SysTick_Ms = 0U;
 
 void SysTick_Handler(void) {
     g_SysTick_Ms++;
+    ElevatorMotor_SoftwarePwmTick();
+}
+
+/* Local TIM4 500ms periodic timer for Telemetry */
+volatile uint8 g_tick_500ms = 0U;
+
+void TIM4_IRQHandler(void) {
+    if (GET_BIT(TIM4->SR, TIM_SR_UIF_Pos)) {
+        CLR_BIT(TIM4->SR, TIM_SR_UIF_Pos);
+        g_tick_500ms = 1U;
+    }
 }
 
 /* =================================================================== */
@@ -54,10 +66,22 @@ int main(void) {
     /* 1. Initialize the RCC (System Clock, APB1/APB2 clocks, GPIOA clock) */
     /* Assuming default HSI 16MHz is already selected as System Clock by startup code. */
 
-    /* 2. Call the UART, Timer, SysTick, and FSM initialization functions */
+    /* 2. Call the UART, SysTick, and FSM initialization functions */
     Uart_Init_USART2_115200(APB1_CLOCK_FREQ);
-    Timer_Init_TIM3_500ms(SYS_CLOCK_FREQ);
-    Timer_Init_SysTick(SYS_CLOCK_FREQ);
+    
+    /* ---- SysTick 1ms periodic timer ---- */
+    SysTick->LOAD = (SYS_CLOCK_FREQ / 1000U) - 1U;
+    SysTick->VAL  = 0U;
+    SysTick->CTRL = (1U << 2U) | (1U << 1U) | (1U << 0U); /* CLKSOURCE=CPU, TICKINT=1, ENABLE=1 */
+
+    /* ---- TIM4 500ms periodic timer for telemetry ---- */
+    SET_BIT(RCC->APB1ENR, RCC_APB1ENR_TIM4EN_Pos);
+    TIM4->PSC = (SYS_CLOCK_FREQ / 10000U) - 1U; /* 0.1ms tick */
+    TIM4->ARR = 5000U - 1U;                     /* 500ms */
+    SET_BIT(TIM4->DIER, TIM_DIER_UIE_Pos);
+    Nvic_EnableIrq(TIM4_IRQn);
+    Nvic_SetPriority(TIM4_IRQn, 4U, 0U);
+    SET_BIT(TIM4->CR1, TIM_CR1_CEN_Pos);
     Spi_InitMaster();
     Scheduler_Init_50ms(SYS_CLOCK_FREQ);
     
@@ -111,11 +135,9 @@ int main(void) {
             }
         }
 
-        /* ---- 500ms UART Telemetry ---- */
-        if (g_tick_500ms) {
-            g_tick_500ms = FALSE;
-            Telemetry_SendState(&MasterElevator, &SlaveElevator);
-        }
+        /* ---- DIAGNOSTIC: Bypass TIM3 — blast telemetry with SW delay ---- */
+        Telemetry_SendState(&MasterElevator, &SlaveElevator);
+        for (volatile int i = 0; i < 500000; i++) { /* dirty ~500ms delay */ }
     }
 
     return 0;

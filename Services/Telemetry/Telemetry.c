@@ -87,6 +87,7 @@ void Telemetry_SendState(const ElevatorState_t* masterState, const ElevatorState
     AppendStr(telemetryBuffer, &idx, "\r\n");
     telemetryBuffer[idx] = '\0';
             
-    /* Use DMA for zero-CPU-overhead transmission */
-    Uart_SendString_DMA(telemetryBuffer, (uint16)idx);
+    /* DIAGNOSTIC: Bypass DMA — use blocking polled UART instead */
+    /* Uart_SendString_DMA(telemetryBuffer, (uint16)idx); */
+    Uart_SendString(telemetryBuffer);
 }

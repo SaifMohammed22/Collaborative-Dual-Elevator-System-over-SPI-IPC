@@ -1,93 +1,90 @@
 /**
- * @file    Pwm.c
- * @brief   MCAL — PWM driver implementation.
+ * Pwm.c
+ *
+ *  Created on: 4/12/2026
+ *  Author    : AbdallahDarwish
  */
 
 #include "Pwm.h"
+#include "Timer_Private.h"   /* TimerType struct + base addresses */
 #include "Bit_Operations.h"
+#include "Timer.h"
 
-/* ------------------------------------------------------------------ */
-/*  Internal: enable the timer's APB clock                             */
-/* ------------------------------------------------------------------ */
-static void Pwm_EnableTimerClock(TIM_TypeDef *timer)
-{
-    if      (timer == TIM2) { SET_BIT(RCC->APB1ENR, RCC_APB1ENR_TIM2EN_Pos); }
-    else if (timer == TIM3) { SET_BIT(RCC->APB1ENR, RCC_APB1ENR_TIM3EN_Pos); }
-    else if (timer == TIM4) { SET_BIT(RCC->APB1ENR, RCC_APB1ENR_TIM4EN_Pos); }
-    else if (timer == TIM5) { SET_BIT(RCC->APB1ENR, RCC_APB1ENR_TIM5EN_Pos); }
-    /* Add more timers as needed */
-}
+static uint32 Pwm_BaseAddresses[4] = {TIM2_BASE_ADDR, TIM3_BASE_ADDR, TIM4_BASE_ADDR,TIM5_BASE_ADDR};
 
-/* ------------------------------------------------------------------ */
-/*  Initialise PWM channel                                             */
-/* ------------------------------------------------------------------ */
-void Pwm_Init(const Pwm_CfgType *cfg)
-{
-    TIM_TypeDef     *tim = cfg->Timer;
-    Pwm_ChannelType  ch  = cfg->Channel;
+#define CCR_REG(TIMER, CHANNEL)  *((volatile uint32 *) (&(TIMER->CCR1) + (CHANNEL - 1)))
 
-    Pwm_EnableTimerClock(tim);
 
-    /* Base time-base ------------------------------------------------ */
-    tim->PSC = cfg->Prescaler;
-    tim->ARR = cfg->Period;
-    tim->CNT = 0U;
+void Pwm_Init(uint8 TimerId, uint8 Channel, uint16 Prescaler, uint16 AutoReload) {
+    TimerType *timer = (TimerType *)Pwm_BaseAddresses[TimerId - TIMER2];
 
-    /* PWM Mode 1 (OC1M = 0b110) + Preload enable ------------------- */
-    /*  CCMR1 handles CH1/CH2 ; CCMR2 handles CH3/CH4                 */
-    switch (ch) {
-        case PWM_CHANNEL_1:
-            tim->CCMR1 &= ~(TIM_CCMR1_OC1M_Msk | TIM_CCMR1_OC1PE_Msk);
-            tim->CCMR1 |=  (0x06U << TIM_CCMR1_OC1M_Pos)   /* PWM mode 1 */
-                         |  (1U    << TIM_CCMR1_OC1PE_Pos);  /* preload    */
-            tim->CCR1   = 0U;                                 /* duty = 0% */
-            SET_BIT(tim->CCER, TIM_CCER_CC1E_Pos);           /* enable OC  */
-            break;
+    /*Time-base*/
+    timer->CR1 = 0;
+    timer->PSC = Prescaler;
+    timer->ARR = AutoReload;
+    timer->CNT = 0;
 
-        case PWM_CHANNEL_2:
-            tim->CCMR1 &= ~(TIM_CCMR1_OC2M_Msk | TIM_CCMR1_OC2PE_Msk);
-            tim->CCMR1 |=  (0x06U << TIM_CCMR1_OC2M_Pos)
-                         |  (1U    << TIM_CCMR1_OC2PE_Pos);
-            tim->CCR2   = 0U;
-            SET_BIT(tim->CCER, TIM_CCER_CC2E_Pos);
-            break;
-
-        case PWM_CHANNEL_3:
-            tim->CCMR2 &= ~(TIM_CCMR2_OC3M_Msk | TIM_CCMR2_OC3PE_Msk);
-            tim->CCMR2 |=  (0x06U << TIM_CCMR2_OC3M_Pos)
-                         |  (1U    << TIM_CCMR2_OC3PE_Pos);
-            tim->CCR3   = 0U;
-            SET_BIT(tim->CCER, TIM_CCER_CC3E_Pos);
-            break;
-
-        case PWM_CHANNEL_4:
-            tim->CCMR2 &= ~(TIM_CCMR2_OC4M_Msk | TIM_CCMR2_OC4PE_Msk);
-            tim->CCMR2 |=  (0x06U << TIM_CCMR2_OC4M_Pos)
-                         |  (1U    << TIM_CCMR2_OC4PE_Pos);
-            tim->CCR4   = 0U;
-            SET_BIT(tim->CCER, TIM_CCER_CC4E_Pos);
-            break;
+    /* Channel: PWM Mode 1 + output-compare preload */
+    /*
+     * OCxM[2:0] = 110   → PWM mode 1
+     * OCxPE     = 1     → preload enable
+     * Byte value        = 0x68
+     *
+     * Channels 1,2 → CCMR1      Channels 3,4 → CCMR2
+     * Channel 1,3  → bits 0-7   Channel 2,4 → bits 8-15
+     */
+    if (Channel <= 2) {
+        uint8 shift = (Channel - 1) * 8;
+        timer->CCMR1 &= ~((uint32) 0xFF << shift);
+        timer->CCMR1 |= ((uint32) CCMR_OC_PWM1_PRELOAD << shift);
+    } else {
+        uint8 shift = (Channel - 3) * 8;
+        timer->CCMR2 &= ~((uint32) 0xFF << shift);
+        timer->CCMR2 |= ((uint32) CCMR_OC_PWM1_PRELOAD << shift);
     }
 
-    /* Generate an update event to latch PSC/ARR, then start --------- */
-    SET_BIT(tim->EGR, TIM_EGR_UG_Pos);
-    SET_BIT(tim->CR1, TIM_CR1_ARPE_Pos);  /* ARR preload */
-    SET_BIT(tim->CR1, TIM_CR1_CEN_Pos);   /* start counter */
+    /* Enable channel output in CCER (CCxE bit)*/
+    SET_BIT(timer->CCER, (Channel - 1) * 4);
+
+    CCR_REG(timer, Channel) = 0;
+
+    /* Auto-reload preload + force update to load shadows ── */
+    SET_BIT(timer->CR1, CR1_ARPE);
+    SET_BIT(timer->EGR, EGR_UG);
+    timer->SR = 0;
 }
 
-/* ------------------------------------------------------------------ */
-void Pwm_SetDuty(TIM_TypeDef *timer, Pwm_ChannelType channel, uint32 duty)
-{
-    switch (channel) {
-        case PWM_CHANNEL_1: timer->CCR1 = duty; break;
-        case PWM_CHANNEL_2: timer->CCR2 = duty; break;
-        case PWM_CHANNEL_3: timer->CCR3 = duty; break;
-        case PWM_CHANNEL_4: timer->CCR4 = duty; break;
+/**
+ *  Fixed-point duty-cycle conversion (no float!)
+ *  CCR = (DutyPercent * ARR) / 100
+ */
+void Pwm_SetDutyPercent(uint8 TimerId, uint8 Channel, uint8 DutyPercent) {
+    TimerType *timer  = (TimerType *)Pwm_BaseAddresses[TimerId - TIMER2];
+
+    if (DutyPercent > 100) {
+        DutyPercent = 100;
     }
+
+    uint32 arr = timer->ARR;
+    uint32 ccr = ((uint32) DutyPercent * arr) / 100UL;
+
+    CCR_REG(timer, Channel) = ccr;
 }
 
-/* ------------------------------------------------------------------ */
-uint32 Pwm_GetPeriod(TIM_TypeDef *timer)
-{
-    return timer->ARR;
+void Pwm_Start(uint8 TimerId, uint8 Channel) {
+    TimerType *tim = (TimerType *)Pwm_BaseAddresses[TimerId - TIMER2];
+
+    /* Make sure channel output is enabled */
+    SET_BIT(tim->CCER, (Channel - 1) * 4);
+    /* Start the counter */
+    SET_BIT(tim->CR1, CR1_CEN);
+}
+
+void Pwm_Stop(uint8 TimerId, uint8 Channel) {
+    TimerType *tim = ( TimerType *)Pwm_BaseAddresses[TimerId - TIMER2];
+
+    /* Disable channel output */
+    CLR_BIT(tim->CCER, (Channel - 1) * 4);
+
+    CLR_BIT(tim->CR1, CR1_CEN);
 }

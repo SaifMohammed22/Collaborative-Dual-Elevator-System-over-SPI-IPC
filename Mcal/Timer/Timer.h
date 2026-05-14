@@ -1,15 +1,39 @@
-#ifndef TIMER_H_
-#define TIMER_H_
+/**
+ * Timer.h
+ *
+ *  Created on: 4/12/2026
+ *  Author    : AbdallahDarwish
+ */
+
+#ifndef TIMER_H
+#define TIMER_H
 
 #include "Std_Types.h"
 
-/* Global flag for 500ms tick */
-extern volatile boolean g_tick_500ms;
+/* Timer IDs (General-purpose timers) */
+#define TIMER2    2U
+#define TIMER3    3U
+#define TIMER4    4U
+#define TIMER5    5U
 
-/* Initializes TIM3 with the specified prescaler and auto-reload for 500ms */
-void Timer_Init_TIM3_500ms(uint32 sys_clock_freq);
+#define CH1  1U
+#define CH2  2U
+#define CH3  3U
+#define CH4  4U
 
-/* Initializes the SysTick timer */
-void Timer_Init_SysTick(uint32 sys_clock_freq);
+typedef void (*TimerCallback)(void);
 
-#endif /* TIMER_H_ */
+void Timer_Init(uint8 TimerId, uint16 Prescaler, uint16 AutoReload);
+
+void Timer_Start(uint8 TimerId);
+
+void Timer_Stop(uint8 TimerId);
+
+void Timer_DelayMs(uint8 TimerId, uint32 DelayMs);
+
+void Timer_DelayMsAsync(uint8 TimerId, uint32 DelayMs, TimerCallback Callback);
+
+void Timer_OcToggleInit(uint8 TimerId, uint8 Channel,
+                        uint16 Prescaler, uint16 Period);
+
+#endif /* TIMER_H */

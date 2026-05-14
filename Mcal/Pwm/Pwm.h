@@ -1,59 +1,57 @@
 /**
- * @file    Pwm.h
- * @brief   MCAL — PWM (Timer OC) driver for STM32F401xE.
+ * Pwm.h
  *
- * Targets a single general-purpose timer channel in PWM mode 1.
- * The caller selects the timer instance, channel, prescaler, and ARR
- * at init time; afterwards only the duty cycle changes at runtime.
+ *  Created on: 4/12/2026
+ *  Author    : AbdallahDarwish
  */
 
-#ifndef PWM_H_
-#define PWM_H_
+#ifndef PWM_H
+#define PWM_H
 
 #include "Std_Types.h"
-#include "Mcu_Hw.h"
 
-/* ------------------------------------------------------------------ */
-/*  Channel index                                                      */
-/* ------------------------------------------------------------------ */
-typedef enum {
-    PWM_CHANNEL_1 = 0U,
-    PWM_CHANNEL_2 = 1U,
-    PWM_CHANNEL_3 = 2U,
-    PWM_CHANNEL_4 = 3U
-} Pwm_ChannelType;
-
-/* ------------------------------------------------------------------ */
-/*  Configuration                                                      */
-/* ------------------------------------------------------------------ */
-typedef struct {
-    TIM_TypeDef     *Timer;       /* e.g. TIM2, TIM3, TIM4 …           */
-    Pwm_ChannelType  Channel;
-    uint16         Prescaler;   /* TIMx_PSC value                    */
-    uint32         Period;      /* TIMx_ARR value (auto-reload)      */
-} Pwm_CfgType;
-
-/* ------------------------------------------------------------------ */
-/*  API                                                                */
-/* ------------------------------------------------------------------ */
+/* PWM Channel IDs */
+#define PWM_CHANNEL_1   1U
+#define PWM_CHANNEL_2   2U
+#define PWM_CHANNEL_3   3U
+#define PWM_CHANNEL_4   4U
 
 /**
- * @brief Enable the APB timer clock and configure the channel in
- *        PWM Mode 1 with an initial duty of 0%.
+ * @brief  Initialise a timer channel for PWM output.
+ *         Configures PSC, ARR, and sets the channel to PWM Mode 1.
+ *         Does NOT start the output — call Pwm_Start() afterwards.
+ *
+ *         NOTE: The GPIO pin must be configured as GPIO_AF and the
+ *               correct alternate-function must be set BEFORE calling this.
+ *
+ * @param  TimerId      TIMER_2 .. TIMER_5  (from Timer.h)
+ * @param  Channel      PWM_CHANNEL_1 .. PWM_CHANNEL_4
+ * @param  Prescaler    Timer prescaler  (PSC value, divides by PSC+1)
+ * @param  AutoReload   Timer auto-reload (ARR value, period = ARR+1 ticks)
  */
-void Pwm_Init(const Pwm_CfgType *cfg);
+void Pwm_Init(uint8 TimerId, uint8 Channel, uint16 Prescaler, uint16 AutoReload);
 
 /**
- * @brief Change the duty cycle (CCRx) of the already-initialised channel.
- * @param timer    Timer peripheral.
- * @param channel  Channel index.
- * @param duty     New CCR value (0 … ARR).
+ * @brief  Set the duty cycle using integer-only (fixed-point) arithmetic.
+ *         Maps 0–100 % to 0–ARR without using float.
+ *
+ *         Formula:  CCRx = (DutyPercent * ARR) / 100
+ *         Uses uint32 intermediate to prevent 16-bit overflow.
+ *
+ * @param  TimerId       TIMER_2 .. TIMER_5
+ * @param  Channel       PWM_CHANNEL_1 .. PWM_CHANNEL_4
+ * @param  DutyPercent   0 – 100
  */
-void Pwm_SetDuty(TIM_TypeDef *timer, Pwm_ChannelType channel, uint32 duty);
+void Pwm_SetDutyPercent(uint8 TimerId, uint8 Channel, uint8 DutyPercent);
 
 /**
- * @brief Return the current ARR value (useful for % calculation).
+ * @brief  Start PWM output on the given channel.
  */
-uint32 Pwm_GetPeriod(TIM_TypeDef *timer);
+void Pwm_Start(uint8 TimerId, uint8 Channel);
 
-#endif /* PWM_H_ */
+/**
+ * @brief  Stop PWM output on the given channel.
+ */
+void Pwm_Stop(uint8 TimerId, uint8 Channel);
+
+#endif /* PWM_H */

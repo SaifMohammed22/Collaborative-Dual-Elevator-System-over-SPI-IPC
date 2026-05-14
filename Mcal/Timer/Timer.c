@@ -1,45 +1,170 @@
+/**
+ * Timer.c
+ *
+ *  Created on: 4/12/2026
+ *  Author    : AbdallahDarwish
+ */
+
 #include "Timer.h"
-#include "Mcu_Hw.h"
+#include "Timer_Private.h"
 #include "Bit_Operations.h"
 #include "Nvic.h"
 
-volatile boolean g_tick_500ms = FALSE;
+#define NUM_OF_TIMERS 4U
 
-void Timer_Init_TIM3_500ms(uint32 sys_clock_freq) {
-    /* Enable TIM3 Clock */
-    SET_BIT(RCC->APB1ENR, RCC_APB1ENR_TIM3EN_Pos);
-    
-    /* Calculate Prescaler for 10KHz tick (0.1ms) */
-    TIM3->PSC = (sys_clock_freq / 10000U) - 1U;
-    
-    /* Set Auto-Reload Register for exactly 500ms (5000 * 0.1ms = 500ms) */
-    TIM3->ARR = 5000U - 1U;
-    
-    /* Enable Update Interrupt */
-    SET_BIT(TIM3->DIER, TIM_DIER_UIE_Pos);
-    
-    /* Enable TIM3 in NVIC */
-    Nvic_EnableIrq(TIM3_IRQn);
-    Nvic_SetPriority(TIM3_IRQn, 3U, 0U);
-    
-    /* Enable TIM3 */
-    SET_BIT(TIM3->CR1, TIM_CR1_CEN_Pos);
+static uint32 Timer_BaseAddresses[NUM_OF_TIMERS] = {TIM2_BASE_ADDR, TIM3_BASE_ADDR, TIM4_BASE_ADDR, TIM5_BASE_ADDR};
+
+/* NVIC IRQ numbers:  TIM2=28, TIM3=29, TIM4=30, TIM5=50 */
+static uint8 Timer_NvicIrq[NUM_OF_TIMERS] = {28, 29, 30, 50};
+
+static TimerCallback Timer_Callbacks[NUM_OF_TIMERS] = {0};
+
+static TimerType *Timer_GetPeripheral(uint8 TimerId) {
+    return (TimerType *) Timer_BaseAddresses[TimerId - TIMER2];
 }
 
-void TIM3_IRQHandler(void) {
-    /* Check update interrupt flag */
-    if (GET_BIT(TIM3->SR, TIM_SR_UIF_Pos)) {
-        /* Clear update interrupt flag */
-        CLR_BIT(TIM3->SR, TIM_SR_UIF_Pos);
-        
-        /* Set 500ms tick flag to defer processing to the main loop */
-        g_tick_500ms = TRUE;
+void Timer_Init(uint8 TimerId, uint16 Prescaler, uint16 AutoReload) {
+    TimerType *timer = Timer_GetPeripheral(TimerId);
+
+    timer->CR1 = 0; // Reset timer
+    timer->PSC = Prescaler;
+    timer->ARR = AutoReload;
+    timer->CNT = 0;
+
+    SET_BIT(timer->EGR, EGR_UG); // Force update to load PSC & ARR
+    timer->SR = 0; // Clear the update flag that UG set
+}
+
+void Timer_Start(uint8 TimerId) {
+    TimerType *tim = Timer_GetPeripheral(TimerId);
+    SET_BIT(tim->CR1, CR1_CEN);
+}
+
+void Timer_Stop(uint8 TimerId) {
+    TimerType *tim = Timer_GetPeripheral(TimerId);
+    CLR_BIT(tim->CR1, CR1_CEN);
+}
+
+/**
+ *  Synchronous delay — blocks until timer overflows
+ *  16 MHz HSI  ÷  (PSC+1 = 16000) = 1 kHz  →  1 tick = 1 ms
+ */
+void Timer_DelayMs(uint8 TimerId, uint32 DelayMs) {
+    TimerType *timer =(TimerType *)Timer_BaseAddresses[TimerId - TIMER2];
+
+    timer->CR1 = 0; // Stop & reset
+    timer->PSC = 15999U / 3;
+    timer->ARR = (uint16) (DelayMs - 1);
+    timer->CNT = 0;
+
+    SET_BIT(timer->EGR, EGR_UG); // Load shadow registers
+    timer->SR = 0; // Clear UIF caused by UG
+
+    SET_BIT(timer->CR1, CR1_OPM); // One-pulse mode
+    SET_BIT(timer->CR1, CR1_CEN); // Start counting
+
+    while (!GET_BIT(timer->SR, SR_UIF)) {
+        // Poll – CPU is blocked here
+    }
+
+    timer->SR = 0; // Clear UIF
+    CLR_BIT(timer->CR1, CR1_CEN); // Stop counter
+}
+
+
+void Timer_DelayMsAsync(uint8 TimerId, uint32 DelayMs, TimerCallback Callback) {
+    TimerType *timer =(TimerType *)Timer_BaseAddresses[TimerId - TIMER2];
+    uint8 index = TimerId - TIMER2;
+    uint8 irqNum = Timer_NvicIrq[index];
+
+    Timer_Callbacks[index] = Callback;
+
+    timer->CR1 = 0; // Stop & reset
+    timer->PSC = 15999U / 3;
+    timer->ARR = (uint16) (DelayMs - 1);
+    timer->CNT = 0;
+
+    SET_BIT(timer->EGR, EGR_UG); // Load shadow registers
+    timer->SR = 0; // Clear UIF caused by UG
+
+    SET_BIT(timer->CR1, CR1_OPM); // One-pulse mode
+
+    SET_BIT(timer->DIER, DIER_UIE); // Enable update interrupt
+    Nvic_EnableIrq(irqNum);
+
+    SET_BIT(timer->CR1, CR1_CEN); // Start counting
+}
+
+/**
+ *  Output Compare Toggle — pin flips every time CNT == CCRx.
+ *  Toggle every 1s:  PSC=15999, ARR=999, CompareValue=0
+ */
+void Timer_OcToggleInit(uint8 TimerId, uint8 Channel, uint16 Prescaler, uint16 Period) {
+    TimerType *timer =(TimerType *)Timer_BaseAddresses[TimerId - TIMER2];
+
+    /* Stop & reset */
+    timer->CR1 = 0;
+
+    /* Time-base */
+    timer->PSC = Prescaler;
+    timer->ARR = Period - 1;
+    timer->CNT = 0;
+
+    /* Set channel to OC Toggle mode (OCxM = 011)
+     *    Channels 1,2 → CCMR1   |   Channels 3,4 → CCMR2
+     *    Channel 1,3 → bits[7:0] |   Channel 2,4 → bits[15:8]
+     */
+    if (Channel <= 2) {
+        uint8 shift = (Channel - 1) * 8;
+        timer->CCMR1 &= ~((uint32) 0xFF << shift);
+        timer->CCMR1 |= ((uint32) CCMR_OC_TOGGLE << shift);
+    } else {
+        uint8 shift = (Channel - 3) * 8;
+        timer->CCMR2 &= ~((uint32) 0xFF << shift);
+        timer->CCMR2 |= ((uint32) CCMR_OC_TOGGLE << shift);
+    }
+
+    /* Set compare value (CCRx) */
+    volatile uint32 *ccr = &timer->CCR1 + (Channel - 1);
+    *ccr = 0;
+
+    /* Enable channel output (CCxE bit in CCER) */
+    SET_BIT(timer->CCER, (Channel - 1) * 4);
+
+    /* Load shadow registers & clear flags */
+    SET_BIT(timer->EGR, EGR_UG);
+    timer->SR = 0;
+
+    /* Start */
+    SET_BIT(timer->CR1, CR1_CEN);
+}
+
+static void Timer_HandleIrq(uint8 index) {
+    TimerType *timer =(TimerType *)Timer_BaseAddresses[index];
+
+
+    if (GET_BIT(timer->SR, SR_UIF)) {
+        timer->SR = 0; // Clear UIF
+        CLR_BIT(timer->DIER, DIER_UIE); // Disable further IRQs
+        CLR_BIT(timer->CR1, CR1_CEN); // Stop counter
+
+        if (Timer_Callbacks[index] != 0) {
+            Timer_Callbacks[index]();
+        }
     }
 }
 
-void Timer_Init_SysTick(uint32 sys_clock_freq) {
-    SysTick->LOAD = (sys_clock_freq / 1000U) - 1U;
-    SysTick->VAL = 0U;
-    /* CLKSOURCE = 1 (Processor clock), TICKINT = 1, ENABLE = 1 */
-    SysTick->CTRL = (1U << 2U) | (1U << 1U) | (1U << 0U); 
+#if 0
+void TIM2_IRQHandler(void) {
+    Timer_HandleIrq(0);
 }
+void TIM3_IRQHandler(void) {
+    Timer_HandleIrq(1);
+}
+void TIM4_IRQHandler(void) {
+    Timer_HandleIrq(2);
+}
+void TIM5_IRQHandler(void) {
+    Timer_HandleIrq(3);
+}
+#endif

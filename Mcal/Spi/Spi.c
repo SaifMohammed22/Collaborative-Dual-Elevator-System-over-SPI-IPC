@@ -22,7 +22,7 @@ void Spi_InitMaster(void) {
     /* Master selection, CPOL/CPHA = 0, BR = fPCLK/16, 8-bit, MSB first */
     WRITE_REG(SPI1->CR1, (1U << 2)); /* MSTR bit */
     /* Enable SPI peripheral */
-    SET_BIT(SPI1->CR1, 6);
+    /* SET_BIT(SPI1->CR1, 6); commented out to prevent PA6 pin hijacking in Proteus */
 }
 
 void Spi_InitSlave(void) {
@@ -32,7 +32,7 @@ void Spi_InitSlave(void) {
     /* Clear master bit -> slave mode */
     CLR_BIT(SPI1->CR1, 2);
     /* Enable SPI */
-    SET_BIT(SPI1->CR1, 6);
+    /* SET_BIT(SPI1->CR1, 6); commented out to prevent PA6 pin hijacking in Proteus */
 }
 
 void Spi_ExchangeFrame(const Ipc_SpiFrame_t* tx, Ipc_SpiFrame_t* rx) {

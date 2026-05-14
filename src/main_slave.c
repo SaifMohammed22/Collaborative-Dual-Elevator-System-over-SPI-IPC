@@ -1,5 +1,7 @@
 /* Enable slave firmware by default on this branch */
 #include "Std_Types.h"
+#include "Mcu_Hw.h"
+#include "Bit_Operations.h"
 
 #define TURN_OFF_SLAVE 0U  /* Set to 1 to turn off, 0 to enable */
 
@@ -24,6 +26,7 @@ volatile uint32 g_SysTick_Ms = 0U;
 
 void SysTick_Handler(void) {
     g_SysTick_Ms++;
+    ElevatorMotor_SoftwarePwmTick();
 }
 
 int main(void) {
@@ -31,7 +34,9 @@ int main(void) {
         while (1) { }
     #else
         /* ---- Peripheral Initialisation ---- */
-        Timer_Init_SysTick(SYS_CLOCK_FREQ);
+        SysTick->LOAD = (SYS_CLOCK_FREQ / 1000U) - 1U;
+        SysTick->VAL  = 0U;
+        SysTick->CTRL = (1U << 2U) | (1U << 1U) | (1U << 0U);
         Spi_InitSlave();
         Scheduler_Init_50ms(SYS_CLOCK_FREQ);
 

@@ -1,64 +1,40 @@
 /**
  * @file    Elevator_Motor.c
- * @brief   HAL — Motor (LED/PWM) implementation.
- *
- * ┌─────────────────────────────────────────────────────────┐
- * │  Default Pin & Timer                                    │
- * │                                                         │
- * │  Motor LED  →  PA6  (TIM3 Channel 1,  AF2)             │
- * │                                                         │
- * │  Prescaler  = 15   → TIM3 tick = 1 MHz  (16 MHz / 16)  │
- * │  ARR        = 999  → PWM freq  ≈ 1 kHz                 │
- * │                                                         │
- * │  Adjust to your actual clock tree / pin assignment.     │
- * └─────────────────────────────────────────────────────────┘
+ * @brief   HAL — Motor implementation via Software PWM on PA0.
  */
 
 #include "Elevator_Motor.h"
-
-/* ---- MCAL includes (hidden from the HAL header) ------------------- */
 #include "Gpio.h"
-#include "Pwm.h"
+#include "Mcu_Hw.h"
 
-/* ---- Motor timer configuration ------------------------------------ */
-#define MOTOR_TIMER         TIM3
-#define MOTOR_CHANNEL       PWM_CHANNEL_1
+/* ---- Motor GPIO configuration ------------------------------------ */
 #define MOTOR_GPIO_PORT     GPIOA
-#define MOTOR_GPIO_PIN      6U
-#define MOTOR_GPIO_AF       2U          /* AF2 = TIM3 on PA6 */
+#define MOTOR_GPIO_PIN      0U
 
-#define MOTOR_PSC           15U         /* prescaler (16 MHz / 16 = 1 MHz) */
-#define MOTOR_ARR           999U        /* auto-reload → ~1 kHz PWM */
+/* ---- Software PWM State ------------------------------------------ */
+static volatile uint8 g_SoftwarePwm_Duty = 0U;
 
 /* =================================================================== */
 /*  Initialisation                                                     */
 /* =================================================================== */
 void ElevatorMotor_Init(void)
 {
-    /* ---- GPIO: AF push-pull for PWM output ----------------------- */
+    /* 1. Enable GPIOA Clock */
     Gpio_EnableClock(MOTOR_GPIO_PORT);
 
+    /* 2. Configure PA0 as General Purpose Output (Push-Pull) */
     Gpio_CfgType pin_cfg = {
         .Port    = MOTOR_GPIO_PORT,
         .Pin     = MOTOR_GPIO_PIN,
-        .Mode    = GPIO_MODE_AF,
+        .Mode    = GPIO_MODE_OUTPUT,
         .OType   = GPIO_OTYPE_PUSHPULL,
         .PuPd    = GPIO_PUPD_NONE,
         .Speed   = GPIO_SPEED_HIGH,
-        .AltFunc = MOTOR_GPIO_AF
+        .AltFunc = 0U /* Not used in output mode */
     };
     Gpio_ConfigPin(&pin_cfg);
 
-    /* ---- Timer / PWM --------------------------------------------- */
-    Pwm_CfgType pwm_cfg = {
-        .Timer     = MOTOR_TIMER,
-        .Channel   = MOTOR_CHANNEL,
-        .Prescaler = MOTOR_PSC,
-        .Period    = MOTOR_ARR
-    };
-    Pwm_Init(&pwm_cfg);
-
-    /* Start with motor stopped */
+    /* 3. Start with motor stopped */
     Elevator_SetSpeed(MOTOR_SPEED_STOP);
 }
 
@@ -67,13 +43,29 @@ void ElevatorMotor_Init(void)
 /* =================================================================== */
 void Elevator_SetSpeed(uint8 speed_pct)
 {
-    /* Clamp to 0 – 100 */
-    if (speed_pct > 100U) {
-        speed_pct = 100U;
+    /* User specified presets: STOP=0, SLOW=2, FULL=10 */
+    if (speed_pct > 10U) {
+        speed_pct = 10U;
+    }
+    g_SoftwarePwm_Duty = speed_pct;
+}
+
+/* =================================================================== */
+/*  Software PWM Engine (Called every 1ms from SysTick)                */
+/* =================================================================== */
+void ElevatorMotor_SoftwarePwmTick(void)
+{
+    static uint8 count = 0U;
+
+    /* Cycle from 0 to 9 */
+    if (count < g_SoftwarePwm_Duty) {
+        Gpio_WriteHigh(MOTOR_GPIO_PORT, MOTOR_GPIO_PIN);
+    } else {
+        Gpio_WriteLow(MOTOR_GPIO_PORT, MOTOR_GPIO_PIN);
     }
 
-    uint32 arr  = Pwm_GetPeriod(MOTOR_TIMER);
-    uint32 duty = ((uint32)speed_pct * (arr + 1U)) / 100U;
-
-    Pwm_SetDuty(MOTOR_TIMER, MOTOR_CHANNEL, duty);
+    count++;
+    if (count >= 10U) {
+        count = 0U;
+    }
 }
