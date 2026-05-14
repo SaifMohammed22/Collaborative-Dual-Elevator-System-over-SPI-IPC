@@ -25,6 +25,9 @@
 ElevatorState_t MasterElevator = {1, 0, ELEV_IDLE, FLAG_NORMAL};
 ElevatorState_t SlaveElevator  = {1, 0, ELEV_IDLE, FLAG_NORMAL};
 
+/* Pending command for Slave — injected into SPI frame reserved_1 by main_master */
+uint8 Dispatcher_SlaveCommand = 0U;
+
 /* =================================================================== */
 /*  Helpers                                                             */
 /* =================================================================== */
@@ -114,15 +117,16 @@ void Dispatch_Call(uint8 requested_floor, Direction_t requested_dir) {
     if (score_master <= score_slave) {
         /* Assign to Master (local) */
         ENTER_CRITICAL();
-        if (Target_Floor == 0U) {
+        if (Target_Floor == 0U || score_master == 1U) {
             Target_Floor = requested_floor;
         }
         EXIT_CRITICAL();
     } else {
-        /* Assign to Slave (remote via SPI) */
+        /* Assign to Slave (remote — queued into Dispatcher_SlaveCommand
+         * which main_master.c injects into the SPI frame's reserved_1) */
         ENTER_CRITICAL();
-        if (SlaveElevator.target_floor == 0U) {
-            SlaveElevator.target_floor = requested_floor;
+        if (Dispatcher_SlaveCommand == 0U || score_slave == 1U) {
+            Dispatcher_SlaveCommand = requested_floor;
         }
         EXIT_CRITICAL();
     }

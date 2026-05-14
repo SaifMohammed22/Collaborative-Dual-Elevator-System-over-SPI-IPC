@@ -90,6 +90,15 @@ int main(void) {
             Ipc_SpiFrame_t rxFrame;
 
             Ipc_BuildFrame(&MasterElevator, &txFrame);
+
+            /* Inject pending Slave command into the reserved_1 byte */
+            if (Dispatcher_SlaveCommand != 0U) {
+                txFrame.reserved_1 = Dispatcher_SlaveCommand;
+                Dispatcher_SlaveCommand = 0U;
+                /* Recalculate checksum since we modified the frame */
+                txFrame.checksum = Ipc_ComputeChecksum((const uint8*)&txFrame, 7);
+            }
+
             Spi_ExchangeFrame(&txFrame, &rxFrame);
 
             if (Ipc_VerifyFrame(&rxFrame)) {
